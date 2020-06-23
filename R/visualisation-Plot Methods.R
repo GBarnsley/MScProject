@@ -99,7 +99,11 @@ plotSamples.iSIR <- function(x, timePoints = NA){
           ggplot2::geom_line(
             ggplot2::aes(
               x = data[,1],
+<<<<<<< HEAD
               y = data[,3]
+=======
+              y = data[,2]
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
             )
           ) +
           ggplot2::labs(

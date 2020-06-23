@@ -4,7 +4,11 @@
 \alias{independenceSampler}
 \title{Generates a candidate sample from a predetermined fixed distribution}
 \usage{
+<<<<<<< HEAD
 independenceSampler(epiModel, hyperParameters, i)
+=======
+independenceSampler(epiModel, hyperParameters)
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
 }
 \arguments{
 \item{epiModel}{epidemic model}

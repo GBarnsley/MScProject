@@ -4,7 +4,11 @@
 \alias{randomWalk}
 \title{Generates a new candidate using the randomwalk method.}
 \usage{
+<<<<<<< HEAD
 randomWalk(epiModel, hyperParameters, i)
+=======
+randomWalk(epiModel, priors)
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
 }
 \description{
 Generates a new candidate using the randomwalk method.

@@ -1,11 +1,19 @@
 #'
 #' @export
+<<<<<<< HEAD
 stepProp <- function(epiModel, hyperParameters, i){
+=======
+stepProp <- function(epiModel, hyperParameters){
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   UseMethod("stepProp")
 }
 #'
 #' @export
+<<<<<<< HEAD
 stepProp.iSIR <- function(epiModel, hyperParameters, i){
+=======
+stepProp.iSIR <- function(epiModel, hyperParameters){
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   direction <- sample(c(-1,1), 1, replace = TRUE)
   if(direction == 1){
     lower <- sample(x = which(epiModel@newI!=0), size = 1, replace = TRUE)
@@ -20,6 +28,7 @@ stepProp.iSIR <- function(epiModel, hyperParameters, i){
                             replace = TRUE)
   }
   if(lower <= 0|upper > length(epiModel@newI)){
+<<<<<<< HEAD
     epiModel@attempts <- epiModel@attempts + 1
     return(epiModel)
   }
@@ -54,6 +63,22 @@ stepProp.iSIR <- function(epiModel, hyperParameters, i){
 #'
 #' @export
 stepProp.rSIR <- function(epiModel, hyperParameters, i){
+=======
+    return(NA)
+  }
+  epiModel@newI[lower] <- epiModel@newI[lower] - direction
+  epiModel@S[(lower+1):upper] <- epiModel@S[(lower+1):upper] + direction
+  epiModel@I[(lower+1):upper] <- epiModel@I[(lower+1):upper] - direction
+  if(any(epiModel@S[(lower+1):upper]<=0)|any(epiModel@I[(lower+1):upper]<=0)){
+    return(NA)
+  }
+  epiModel@newI[upper] <- epiModel@newI[upper] + direction
+  return(epiModel)
+}
+#'
+#' @export
+stepProp.rSIR <- function(epiModel, hyperParameters){
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   direction <- sample(c(-1,1), 1, replace = TRUE)
   if(direction == 1){
     lower <- sample(x = which(epiModel@newR!=0), size = 1, replace = TRUE)
@@ -68,6 +93,7 @@ stepProp.rSIR <- function(epiModel, hyperParameters, i){
                             replace = TRUE)
   }
   if(lower <= 0|upper > length(epiModel@newR)){
+<<<<<<< HEAD
     epiModel@attempts <- epiModel@attempts + 1
     return(epiModel)
   }
@@ -97,4 +123,37 @@ stepProp.rSIR <- function(epiModel, hyperParameters, i){
     epiModel@attempts <- epiModel@attempts + 1
     return(epiModel)
   }
+=======
+    return(NA)
+  }
+  epiModel@newR[lower] <- epiModel@newR[lower] - direction
+  epiModel@I[(lower+1):upper] <- epiModel@I[(lower+1):upper] + direction
+  epiModel@R[(lower+1):upper] <- epiModel@R[(lower+1):upper] - direction
+  if(any(epiModel@I[(lower+1):upper]<=0)|any(epiModel@R[(lower+1):upper]<=0)){
+    return(NA)
+  }
+  epiModel@newR[upper] <- epiModel@newR[upper] + direction
+  return(epiModel)
+}
+#'
+#' @export
+logStep <- function(epiModel1, epiModel2, hyperParameters){
+  UseMethod("logStep")
+}
+#'
+#' @export
+logStep.iSIR <- function(epiModel1, epiModel2){
+  position <- which(epiModel2@newI - epiModel1@newI == -1)
+  return(
+    -log(epiModel1@newI[position])
+  )
+}
+#'
+#' @export
+logStep.rSIR <- function(epiModel1, epiModel2){
+  position <- which(epiModel2@newR - epiModel1@newR == -1)
+  return(
+    -log(epiModel1@newR[position])
+  )
+>>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
 }
