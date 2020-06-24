@@ -6,7 +6,7 @@ generateTimepoints <- function(samples){
 #'
 #'@export
 generateTimepoints.iSIR <- function(samples){
-  usefulNewILength <- length(samples[[round(length(samples)/2)]]@newI)
+  usefulNewILength <- which.min(samples[[round(length(samples)/2)]]@S==0) - 1
   timePoints <- c(sample(1:round(usefulNewILength/3), 1),
                   sample(round(usefulNewILength/3):round(usefulNewILength*2/3), 1),
                   sample(round(usefulNewILength*2/3):usefulNewILength, 1))
@@ -15,7 +15,7 @@ generateTimepoints.iSIR <- function(samples){
 #'
 #'@export
 generateTimepoints.rSIR <- function(samples){
-  minUseful <- length(samples[[round(length(samples)/2)]]@R == 0)
+  minUseful <- which.max(samples[[round(length(samples)/2)]]@R != 0)
   lengthUseful <- length(samples[[round(length(samples)/2)]]@R) - minUseful
   timePoints <- c(sample(minUseful:round(minUseful + lengthUseful/3), 1),
                   sample(round(minUseful + lengthUseful/3):round(minUseful + lengthUseful*2/3), 1),
