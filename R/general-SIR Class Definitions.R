@@ -9,49 +9,17 @@ SIRclass <- setClass(
     S = "ANY",
     I = "ANY",
     R = "ANY",
-<<<<<<< HEAD
     t.step = "numeric",
     acceptance = "numeric",
     attempts = "numeric"
-=======
-    t.step = "numeric"
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
     )
 )
 newISIRclass <- setClass(
   "iSIR",
-<<<<<<< HEAD
-=======
-  slots = c(
-    newI = "ANY",
-    newR = "ANY",
-    N = "numeric",
-    Beta = "ANY",
-    Gamma = "ANY",
-    S = "ANY",
-    I = "ANY",
-    R = "ANY",
-    t.step = "numeric"
-  ),
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   contains = "SIR"
 )
 newRSIRclass <- setClass(
   "rSIR",
-<<<<<<< HEAD
-=======
-  slots = c(
-    newI = "ANY",
-    newR = "ANY",
-    N = "numeric",
-    Beta = "ANY",
-    Gamma = "ANY",
-    S = "ANY",
-    I = "ANY",
-    R = "ANY",
-    t.step = "numeric"
-  ),
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   contains = "SIR"
 )
 #' Creates an object of class SIR, iSIR or rSIR
@@ -92,13 +60,9 @@ SIR <- function(S = NULL,
                             N = N,
                             Beta = Beta,
                             Gamma = Gamma,
-<<<<<<< HEAD
                             t.step = t.step,
                             acceptance = 0,
                             attempts = 0)))
-=======
-                            t.step = t.step)))
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   }
   else if(is.null(R)&is.null(I)&is.null(newR)&(!is.null(S)|!is.null(newI))){
     return(dataGen(newRSIRclass(S = S,
@@ -109,13 +73,9 @@ SIR <- function(S = NULL,
                                 N = N,
                                 Beta = Beta,
                                 Gamma = Gamma,
-<<<<<<< HEAD
                                 t.step = t.step,
                                 acceptance = 0,
                                 attempts = 0)))
-=======
-                                t.step = t.step)))
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   }
   else{
     return(dataGen(SIRclass(S = S,
@@ -126,13 +86,9 @@ SIR <- function(S = NULL,
                             N = N,
                             Beta = Beta,
                             Gamma = Gamma,
-<<<<<<< HEAD
                             t.step = t.step,
                             acceptance = 0,
                             attempts = 0)))
-=======
-                            t.step = t.step)))
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
 
   }
 }

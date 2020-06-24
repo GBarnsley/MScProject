@@ -21,8 +21,7 @@ dataGen <- function(epiModel){
 dataGen.SIR <- function(epiModel){
   #Generates what values it can from the supplied values
   if(any(is.null(epiModel@S))&!is.null(epiModel@newI)){
-    epiModel@S <- c()
-    epiModel@S[1] <- epiModel@N - 1
+    epiModel@S <- c(epiModel@N - 1)
     for(i in 1:length(epiModel@newI)){
       epiModel@S[i+1] <- epiModel@S[i] - epiModel@newI[i]
     }

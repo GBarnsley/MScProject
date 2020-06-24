@@ -2,16 +2,11 @@
 #' @param epiModel epidemic model
 #' @param hyperParameters list of hyperparameters, used in distribution
 #' @export
-<<<<<<< HEAD
 independenceSampler <- function(epiModel, hyperParameters, i){
-=======
-independenceSampler <- function(epiModel, hyperParameters){
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   UseMethod("independenceSampler")
 }
 #' Independence sampler for the SIR class.
 #' First generates beta and gamma from a normal distribution centred around the mean
-<<<<<<< HEAD
 #' value of their priors.
 #' @export
 independenceSampler.SIR <- function(epiModel, hyperParameters, i){
@@ -87,116 +82,4 @@ independenceSamplerGamma <- function(epiModel, hyperParameters){
     epiModel@attempts <- epiModel@attempts + 1
     return(epiModel)
   }
-=======
-#' value of their priors. Then uses those values to generate a newI or newR using
-#' the standard Binomial distribution from the SIR model.
-#' @export
-independenceSampler.SIR <- function(epiModel, hyperParameters){
-  epiModel@Beta <- rnorm(1,
-                         mean = hyperParameters$`Independence Sampler`$Beta$Mean,
-                         sd = hyperParameters$`Independence Sampler`$Beta$SD)
-  epiModel@Gamma <- rnorm(1,
-                          mean = hyperParameters$`Independence Sampler`$Gamma$Mean,
-                          sd = hyperParameters$`Independence Sampler`$Gamma$SD)
-  if(epiModel@Beta <= 0|epiModel@Gamma <= 0){
-    return(NA)
-  }
-  return(epiModel)
-}
-#' Independence sampler for the iSIR class.
-#' First generates beta and gamma from a normal distribution centred around the mean
-#' value of their priors. Then uses those values to generate a newI or newR using
-#' the standard Binomial distribution from the SIR model.
-#' @export
-independenceSampler.iSIR <- function(epiModel, hyperParameters){
-  epiModel@Beta <- rnorm(1,
-                         mean = hyperParameters$`Independence Sampler`$Beta$Mean,
-                         sd = hyperParameters$`Independence Sampler`$Beta$SD)
-  epiModel@Gamma <- rnorm(1,
-                          mean = hyperParameters$`Independence Sampler`$Gamma$Mean,
-                          sd = hyperParameters$`Independence Sampler`$Gamma$SD)
-  return(simulate(epiModel))
-}
-#' Independence sampler for the rSIR class.
-#' First generates beta and gamma from a normal distribution centred around the mean
-#' value of their priors. Then uses those values to generate a newI or newR using
-#' the standard Binomial distribution from the SIR model.
-#' @export
-independenceSampler.rSIR <- function(epiModel, hyperParameters){
-  return(simulate,iSIR(epiModel, hyperParameters))
-}
-#' Finds the log probability of that the indepdence sampler genreated
-#' that sample.
-#' @export
-logIndependenceSampler <- function(epiModel, hyperParameters){
-  UseMethod("logIndependenceSampler")
-}
-#' Method for the iSIR class.
-#' finds the log density for the values of Beta and Gamma being
-#' generated and then that the binomial chain generated the values of
-#' newI.
-#' @export
-logIndependenceSampler.iSIR <- function(epiModel, hyperParameters){
-  ll <-
-    dnorm(epiModel@Beta,
-          mean = hyperParameters$Beta$Mean,
-          sd = hyperParameters$Beta$SD,
-          log = TRUE) +
-    dnorm(epiModel@Gamma,
-          mean = hyperParameters$Gamma$Mean,
-          sd = hyperParameters$Gamma$SD,
-          log = TRUE)
-  for(t in 1:min(sum(epiModel@S != 0), length(epiModel@newI))){
-    ll <- ll +
-      dbinom(epiModel@newI[t],
-             epiModel@S[t],
-             probGen(epiModel@Beta*epiModel@t.step*epiModel@I[t]),
-             log = TRUE)
-  }
-  return(
-    ll
-  )
-}
-#' Method for the iSIR class.
-#' finds the log density for the values of Beta and Gamma being
-#' generated and then that the binomial chain generated the values of
-#' newR.
-#' @export
-logIndependenceSampler.rSIR <- function(epiModel, hyperParameters){
-  ll <-
-    dnorm(epiModel@Beta,
-          mean = hyperParameters$Beta$Mean,
-          sd = hyperParameters$Beta$SD,
-          log = TRUE) +
-    dnorm(epiModel@Gamma,
-          mean = hyperParameters$Gamma$Mean,
-          sd = hyperParameters$Gamma$SD,
-          log = TRUE)
-  for(t in 1:min(sum(epiModel@I!=0), length(epiModel@newR))){
-    ll <- ll +
-       dbinom(epiModel@newR[t],
-              epiModel@I[t],
-              probGen(epiModel@Gamma*epiModel@t.step),
-              log = TRUE)
-  }
-  return(
-    ll
-  )
-}
-#' Method for the SIR class.
-#' finds the log density for the values of Beta and Gamma being
-#' generated.
-#' @export
-logIndependenceSampler.SIR <- function(epiModel, hyperParameters){
-  return(
-    dnorm(epiModel@Beta,
-          mean = hyperParameters$Beta$Mean,
-          sd = hyperParameters$Beta$SD,
-          log = TRUE) +
-    dnorm(epiModel@Gamma,
-          mean = hyperParameters$Gamma$Mean,
-          sd = hyperParameters$Gamma$SD,
-          log = TRUE)
-  )
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
 }

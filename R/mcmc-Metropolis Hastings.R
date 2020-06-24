@@ -20,61 +20,17 @@ metropolisHastings <- function(epiModel,
   while(identical(current, NA)){
     current <- initialValues(epiModel, hyperParameters$`Initial Values`)
   }
-<<<<<<< HEAD
   for(i in 1:burnin){
     current <- proposal(current, hyperParameters, i)
   }
-  count <- samples
   for(i in 1:samples){
     for(j in 1:keep){
       current <- proposal(current, hyperParameters, j + (i-1)*keep)
     }
     result[[i]] <- current
-    cat(count,"\r")
-    count <- count-1
+    cat(samples - i,"\r")
   }
   cat("\r", "Probability of Acceptance: ", result[[samples]]@acceptance/result[[samples]]@attempts*100, "%\n")
-=======
-  count <- samples
-  accepted <- 0
-  for(i in 1:(samples*keep + burnin)){
-    candidate <- proposal(current, hyperParameters)
-    if(identical(candidate,NA)){
-      acceptance <- -Inf
-    }
-    else{
-      acceptance <-
-        logPrior(candidate, hyperParameters$Priors) +
-        logLikelihood(candidate) +
-        logProposal(candidate, current, proposal, hyperParameters) -
-        logPrior(current, hyperParameters$Priors) -
-        logLikelihood(current) -
-        logProposal(current, candidate, proposal, hyperParameters)
-      #print(c(candidate@Beta, candidate@Gamma, logLikelihood(candidate)))
-      #print(c(current@Beta, current@Gamma, logLikelihood(current)))
-      #print(exp(acceptance))
-      #print(c(candidate@Beta, candidate@Gamma))
-      #print(c(logPrior(candidate, hyperParameters$Priors),
-      #        logLikelihood(candidate),
-      #        logProposal(candidate, current, proposal, hyperParameters),
-      #        logPrior(current, hyperParameters$Priors),
-      #        logLikelihood(current),
-      #        logProposal(current, candidate, proposal, hyperParameters)))
-    }
-    if(log(runif(1)) < acceptance){
-      current <- candidate
-      if(i > burnin){
-      accepted <- accepted + 1
-      }
-    }
-    if(i > burnin & ((i-burnin)%%keep)==0){
-      result[[(i-burnin)/keep]] <- current
-      cat(count,"\r")
-      count <- count-1
-    }
-  }
-  cat("\r", "Probability of Acceptance: ", accepted/(samples*keep), "\n")
->>>>>>> 1c714e3e41b618fd584d43c4f5ae32a0417f471a
   class(result) <- c("samples", class(epiModel))
   return(
     result
