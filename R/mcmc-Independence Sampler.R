@@ -10,14 +10,18 @@ independenceSampler <- function(epiModel, hyperParameters, i){
 #' value of their priors.
 #' @export
 independenceSampler.SIR <- function(epiModel, hyperParameters, i){
-  return(
-    independenceSamplerGamma(
-      independenceSamplerBeta(
-        epiModel, hyperParameters
-      ),
+  if(i%%2 == 0){
+    independenceSamplerBeta(
+      epiModel,
       hyperParameters
     )
-  )
+  }
+  else{
+    independenceSamplerGamma(
+      epiModel,
+      hyperParameters
+    )
+  }
 }
 #'
 #'@export

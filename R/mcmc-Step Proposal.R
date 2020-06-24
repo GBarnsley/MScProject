@@ -52,7 +52,7 @@ stepProp.iSIR <- function(epiModel, hyperParameters, i){
 }
 #'
 #' @export
-stepProp.rSIR <- function(epiModel, hyperParameters){
+stepProp.rSIR <- function(epiModel, hyperParameters, i){
   direction <- sample(c(-1,1), 1, replace = TRUE)
   if(direction == 1){
     lower <- sample(x = which(epiModel@newR!=0), size = 1, replace = TRUE)

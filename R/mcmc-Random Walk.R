@@ -8,13 +8,18 @@ randomWalk <- function(epiModel, hyperParameters, i){
 #' Beta, Gamma and with standard deviation given in hyperparameters.
 #' @export
 randomWalk.SIR <- function(epiModel, hyperParameters, i){
-  return(
+  if(i%%2 == 0){
+    randomWalkBeta(
+      epiModel,
+      hyperParameters
+    )
+  }
+  else{
     randomWalkGamma(
-      randomWalkBeta(
-        epiModel,
-        hyperParameters),
-      hyperParameters)
-  )
+      epiModel,
+      hyperParameters
+    )
+  }
 }
 #'
 #'@export
