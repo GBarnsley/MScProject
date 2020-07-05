@@ -25,7 +25,6 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
     setup = function(model, mvSaved, target, control) {
       minStep <- as.integer(control$`Minimum Step Size`)
       maxStep <- as.integer(control$`Maximum Step Size`)
-      stepLength <- control$`Number of possible steps`
       calcNodes <- model$getDependencies(target)
     },
     ## the run function
@@ -106,7 +105,6 @@ buildMCMCInternal.rSIR <- function(epiModel, hyperParameters){
     setup = function(model, mvSaved, target, control) {
       minStep <- as.integer(control$`Minimum Step Size`)
       maxStep <- as.integer(control$`Maximum Step Size`)
-      stepLength <- control$`Number of possible steps`
       calcNodes <- model$getDependencies(target)
     },
     ## the run function
