@@ -1,20 +1,14 @@
 #' A function that plots and prints ACF plots and effective sample size for samples from the
 #' metropolis hastings algorithm using the acf() function.
 #' @export
-acfSamples <- function(samples, plot, timePoints){
-  UseMethod("acfSamples", samples[[1]])
+acfSamples <- function(epiModel, plot, timePoints = NA){
+  UseMethod("acfSamples")
 }
 #' Method for SIR class, only plots for Beta and Gamma.
 #' @export
-acfSamples.SIR <- function(samples, plot = TRUE){
-  Beta <- rep(NA, length(samples))
-  Gamma <- rep(NA, length(samples))
-  for(i in 1:length(samples)){
-    Beta[i] <- samples[[i]]@Beta
-    Gamma[i] <- samples[[i]]@Gamma
-  }
-  Beta <- acf(Beta, plot = FALSE)
-  Gamma <- acf(Gamma, plot = FALSE)
+acfSamples.SIR <- function(epiModel, plot = TRUE, timePoints){
+  Beta <- acf(epiModel@Samples[,'Beta'], plot = FALSE)
+  Gamma <- acf(epiModel@Samples[,'Gamma'], plot = FALSE)
   if(plot == TRUE){
     print(ggplot2::ggplot() +
             ggplot2::geom_segment(
@@ -71,8 +65,8 @@ acfSamples.SIR <- function(samples, plot = TRUE){
               title = "Gamma"
             ))
   }
-  NeffBeta <- length(samples)/(1 + 2*sum(Beta$acf[-1]))
-  NeffGamma <- length(samples)/(1 + 2*sum(Gamma$acf[-1]))
+  NeffBeta <- nrow(epiModel@Samples)/(1 + 2*sum(Beta$acf[-1]))
+  NeffGamma <- nrow(epiModel@Samples)/(1 + 2*sum(Gamma$acf[-1]))
   cat("\n",
       "The effective samples sizes are:","\n",
       " Beta: ")
@@ -82,27 +76,15 @@ acfSamples.SIR <- function(samples, plot = TRUE){
 }
 #' Method for iSIR class, only plots for Beta, Gamma and newI.
 #' @export
-acfSamples.iSIR <- function(samples, plot = TRUE, timePoints = NA){
-  Beta <- rep(NA, length(samples))
-  Gamma <- rep(NA, length(samples))
-  for(i in 1:length(samples)){
-    Beta[i] <- samples[[i]]@Beta
-    Gamma[i] <- samples[[i]]@Gamma
-  }
-  Beta <- acf(Beta, plot = FALSE)
-  Gamma <- acf(Gamma, plot = FALSE)
+acfSamples.iSIR <- function(epiModel, plot = TRUE, timePoints = NA){
+  Beta <- acf(epiModel@Samples[,'Beta'], plot = FALSE)
+  Gamma <- acf(epiModel@Samples[,'Gamma'], plot = FALSE)
   if(identical(timePoints, NA)){
-    timePoints <- generateTimepoints(samples)
+    timePoints <- generateTimepoints(epiModel)
   }
-  newIs <- matrix(NA,
-                  nrow = min(length(samples)-1, 10*log10(length(samples)) + 1),
-                  ncol = length(timePoints))
-  for(i in 1:ncol(newIs)){
-    newI <- rep(NA, length(samples))
-    for(j in 1:length(samples)){
-      newI[j] <- samples[[j]]@newI[timePoints[i]]
-    }
-    newIs[,i] <- acf(newI, plot = FALSE)$acf
+  newIs <- list()
+  for(i in 1:length(timePoints)){
+    newIs[[i]] <- acf(epiModel@Samples[,paste0("newI[",timePoints[i],"]")], plot = FALSE)$acf
   }
   if(plot == TRUE){
     print(ggplot2::ggplot() +
@@ -163,10 +145,10 @@ acfSamples.iSIR <- function(samples, plot = TRUE, timePoints = NA){
       print(ggplot2::ggplot() +
               ggplot2::geom_segment(
                 ggplot2::aes(
-                  y = newIs[,i],
-                  yend = rep(0, length(newIs[,i])),
-                  x = 1:length(newIs[,i]),
-                  xend = 1:length(newIs[,i])
+                  y = newIs[[i]],
+                  yend = rep(0, length(newIs[[i]])),
+                  x = 1:length(newIs[[i]]),
+                  xend = 1:length(newIs[[i]])
                 )
               ) +
               ggplot2::geom_hline(
@@ -193,11 +175,11 @@ acfSamples.iSIR <- function(samples, plot = TRUE, timePoints = NA){
               ))
     }
   }
-  NeffBeta <- length(samples)/(1 + 2*sum(Beta$acf[-1]))
-  NeffGamma <- length(samples)/(1 + 2*sum(Gamma$acf[-1]))
+  NeffBeta <- nrow(epiModel@Samples)/(1 + 2*sum(Beta$acf[-1]))
+  NeffGamma <- nrow(epiModel@Samples)/(1 + 2*sum(Gamma$acf[-1]))
   NeffTimePoints <- rep(NA, length(timePoints))
   for(i in 1:length(timePoints)){
-    NeffTimePoints[i] <- length(samples)/(1 + 2*sum(newIs[-1,i]))
+    NeffTimePoints[i] <- nrow(epiModel@Samples)/(1 + 2*sum(newIs[[i]][-1]))
   }
   cat("\n",
       "The effective samples sizes are:","\n",
@@ -214,27 +196,15 @@ acfSamples.iSIR <- function(samples, plot = TRUE, timePoints = NA){
 }
 #' Method for rSIR class, only plots for Beta, Gamma and newI.
 #' @export
-acfSamples.rSIR <- function(samples, plot = TRUE, timePoints = NA){
-  Beta <- rep(NA, length(samples))
-  Gamma <- rep(NA, length(samples))
-  for(i in 1:length(samples)){
-    Beta[i] <- samples[[i]]@Beta
-    Gamma[i] <- samples[[i]]@Gamma
-  }
-  Beta <- acf(Beta, plot = FALSE)
-  Gamma <- acf(Gamma, plot = FALSE)
+acfSamples.rSIR <- function(epiModel, plot = TRUE, timePoints = NA){
+  Beta <- acf(epiModel@Samples[,'Beta'], plot = FALSE)
+  Gamma <- acf(epiModel@Samples[,'Gamma'], plot = FALSE)
   if(identical(timePoints, NA)){
-    timePoints <- generateTimepoints(samples)
+    timePoints <- generateTimepoints(epiModel)
   }
-  newRs <- matrix(NA,
-                  nrow = min(length(samples)-1, 10*log10(length(samples)) + 1),
-                  ncol = length(timePoints))
-  for(i in 1:ncol(newRs)){
-    newR <- rep(NA, length(samples))
-    for(j in 1:length(samples)){
-      newR[j] <- samples[[j]]@newR[timePoints[i]]
-    }
-    newRs[,i] <- acf(newR, plot = FALSE)$acf
+  newIs <- list()
+  for(i in 1:length(timePoints)){
+    newIs[[i]] <- acf(epiModel@Samples[,paste0("newR[",timePoints[i],"]")], plot = FALSE)$acf
   }
   if(plot == TRUE){
     print(ggplot2::ggplot() +
@@ -295,10 +265,10 @@ acfSamples.rSIR <- function(samples, plot = TRUE, timePoints = NA){
       print(ggplot2::ggplot() +
               ggplot2::geom_segment(
                 ggplot2::aes(
-                  y = newRs[,i],
-                  yend = rep(0, length(newRs[,i])),
-                  x = 1:length(newRs[,i]),
-                  xend = 1:length(newRs[,i])
+                  y = newIs[[i]],
+                  yend = rep(0, length(newIs[[i]])),
+                  x = 1:length(newIs[[i]]),
+                  xend = 1:length(newIs[[i]])
                 )
               ) +
               ggplot2::geom_hline(
@@ -319,17 +289,17 @@ acfSamples.rSIR <- function(samples, plot = TRUE, timePoints = NA){
                 x = "Lag",
                 y = "ACF",
                 title = paste(
-                  "New R at time ",
+                  "New I at time ",
                   timePoints[i]
                 )
               ))
     }
   }
-  NeffBeta <- length(samples)/(1 + 2*sum(Beta$acf[-1]))
-  NeffGamma <- length(samples)/(1 + 2*sum(Gamma$acf[-1]))
+  NeffBeta <- nrow(epiModel@Samples)/(1 + 2*sum(Beta$acf[-1]))
+  NeffGamma <- nrow(epiModel@Samples)/(1 + 2*sum(Gamma$acf[-1]))
   NeffTimePoints <- rep(NA, length(timePoints))
   for(i in 1:length(timePoints)){
-    NeffTimePoints[i] <- length(samples)/(1 + 2*sum(newRs[-1,i]))
+    NeffTimePoints[i] <- nrow(epiModel@Samples)/(1 + 2*sum(newIs[[i]][-1]))
   }
   cat("\n",
       "The effective samples sizes are:","\n",

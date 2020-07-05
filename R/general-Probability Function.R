@@ -7,6 +7,9 @@
 #' @param x some non-negative value
 #' @return a value on the range (0,1)
 #' @export
-probGen <- function(x){
-  return(1 - exp(-x))
-}
+probGen <- nimble::nimbleFunction(
+  run = function(x = double(0)) {
+    returnType(double(0))
+    return(1 - exp(-x))
+  }
+)

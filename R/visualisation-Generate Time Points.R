@@ -1,24 +1,20 @@
 #'
 #'@export
-generateTimepoints <- function(samples){
-  UseMethod("generateTimepoints", samples[[1]])
+generateTimepoints <- function(epiModel){
+  UseMethod("generateTimepoints")
 }
 #'
 #'@export
-generateTimepoints.iSIR <- function(samples){
-  usefulNewILength <- min(which(samples[[round(length(samples)/2)]]@S==0)) - 1
+generateTimepoints.SIR <- function(epiModel){
+  usefulNewILength <- 0
+  for(i in 1:nrow(epiModel@Samples)){
+    newILength <- max(which(test@Samples[i,-c(1,2)] != 0))
+    if(newILength > usefulNewILength){
+      usefulNewILength <- newILength
+    }
+  }
   timePoints <- c(sample(1:round(usefulNewILength/3), 1),
                   sample(round(usefulNewILength/3):round(usefulNewILength*2/3), 1),
                   sample(round(usefulNewILength*2/3):usefulNewILength, 1))
-  return(timePoints)
-}
-#'
-#'@export
-generateTimepoints.rSIR <- function(samples){
-  minUseful <- min(which(samples[[round(length(samples)/2)]]@R != 0))
-  lengthUseful <- length(samples[[round(length(samples)/2)]]@R) - minUseful
-  timePoints <- c(sample(minUseful:round(minUseful + lengthUseful/3), 1),
-                  sample(round(minUseful + lengthUseful/3):round(minUseful + lengthUseful*2/3), 1),
-                  sample(round(minUseful + lengthUseful*2/3):length(samples[[round(length(samples)/2)]]@newR), 1))
   return(timePoints)
 }
