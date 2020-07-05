@@ -47,13 +47,15 @@ plotSamples.SIR <- function(epiModel, timePoints){
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Beta']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Beta"))
         )
   print(ggplot2::ggplot() +
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Gamma']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Gamma"))
         )
 }
 #' Plots some useful graphs of the bayesian-iSIR Model
@@ -69,13 +71,15 @@ plotSamples.iSIR <- function(epiModel, timePoints = NA){
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Beta']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Beta"))
   )
   print(ggplot2::ggplot() +
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Gamma']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Gamma"))
   )
   if(identical(timePoints, NA)){
     timePoints <- generateTimepoints(epiModel)
@@ -85,7 +89,8 @@ plotSamples.iSIR <- function(epiModel, timePoints = NA){
             ggplot2::geom_line(ggplot2::aes(
               x = 1:nrow(epiModel@Samples),
               y = epiModel@Samples[,paste0("newI[",time,"]")]
-            ))
+            ) +
+              ggplot2::labs(x = "Index", y = paste0("new I at time ",time)))
     )
   }
 }
@@ -102,13 +107,15 @@ plotSamples.rSIR <- function(epiModel, timePoints = NA){
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Beta']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Beta"))
   )
   print(ggplot2::ggplot() +
           ggplot2::geom_line(ggplot2::aes(
             x = 1:nrow(epiModel@Samples),
             y = epiModel@Samples[,'Gamma']
-          ))
+          ) +
+            ggplot2::labs(x = "Index", y = "Gamma"))
   )
   if(identical(timePoints, NA)){
     timePoints <- generateTimepoints(epiModel)
@@ -118,7 +125,8 @@ plotSamples.rSIR <- function(epiModel, timePoints = NA){
             ggplot2::geom_line(ggplot2::aes(
               x = 1:nrow(epiModel@Samples),
               y = epiModel@Samples[,paste0("newR[",time,"]")]
-            ))
+            ) +
+              ggplot2::labs(x = "Index", y = paste0("new R at time ",time)))
     )
   }
 }
