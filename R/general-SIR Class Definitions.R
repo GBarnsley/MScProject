@@ -1,17 +1,10 @@
+library(nimble)
 SIRclass <- setClass(
   "SIR",
   slots = c(
-    newI = "ANY",
-    newR = "ANY",
-    N = "numeric",
-    Beta = "ANY",
-    Gamma = "ANY",
-    S = "ANY",
-    I = "ANY",
-    R = "ANY",
-    t.step = "numeric",
-    acceptance = "numeric",
-    attempts = "numeric"
+    Model = "ANY",
+    MCMC = "ANY",
+    Samples = "ANY"
     )
 )
 newISIRclass <- setClass(
@@ -51,44 +44,144 @@ SIR <- function(S = NULL,
                 Beta = NULL,
                 Gamma = NULL,
                 t.step = 1){
-  if(is.null(S)&is.null(I)&is.null(newI)&(!is.null(R)|!is.null(newR))){
-    return(dataGen(newISIRclass(S = S,
-                            I = I,
-                            R = R,
-                            newI = newI,
-                            newR = newR,
-                            N = N,
-                            Beta = Beta,
-                            Gamma = Gamma,
-                            t.step = t.step,
-                            acceptance = 0,
-                            attempts = 0)))
+  #calculating initial values from given dataS
+  if(is.null(N)){
+    print("Error: N must be specified")
+    return(NA)
   }
-  else if(is.null(R)&is.null(I)&is.null(newR)&(!is.null(S)|!is.null(newI))){
-    return(dataGen(newRSIRclass(S = S,
-                                I = I,
-                                R = R,
-                                newI = newI,
-                                newR = newR,
-                                N = N,
-                                Beta = Beta,
-                                Gamma = Gamma,
-                                t.step = t.step,
-                                acceptance = 0,
-                                attempts = 0)))
+  if(is.null(S)&!is.null(newI)){
+    S <- rep(N-1, length(newI) + 1)
+    for(i in 2:length(S)){
+      S[i] <- N - sum(newI[1:i-1])
+    }
+  }
+  if(is.null(R)&!is.null(newR)){
+    R <- rep(0, length(newR) + 1)
+    for(i in 2:(length(R)-1)){
+      R[i] <- sum(newR[1:i-1])
+    }
+  }
+  if(is.null(I)&!is.null(S)&!is.null(R)){
+    I <- N - S - R
+  }
+  if(is.null(newI)&!is.null(S)){
+    newI <- -diff(S)
+  }
+  if(is.null(newR)&!is.null(R)){
+    newR <- diff(R)
+  }
+  #Setting up models based on nulls
+  if(is.null(newI)){
+    tempCode <- nimble::nimbleCode({
+      # Set priors
+      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
+      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
+      # likelihood
+      S[1] <- Pop - 1
+      I[1] <- 1
+      for(i in 1:TimePeriod){
+        newI[i] ~ dbinom(size = S[i],
+                         prob =  probGen(I[i]*Beta*t.step))
+        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
+        S[i+1] <- S[i] - newI[i]
+        I[i+1] <- I[i] + newI[i] - newR[i]
+      }
+    })
+    return(newISIRclass(
+      Model = nimble::compileNimble(
+        nimble::nimbleModel(
+          code = tempCode,
+          constants = list(TimePeriod = length(newR)),
+          data = list(newR = newR,
+                      t.step = t.step,
+                      Pop = N,
+                      BetaShape = 1,
+                      BetaRate = 1,
+                      GammaShape = 1,
+                      GammaRate = 1),
+          inits = list(Beta = 1,
+                       Gamma = 1,
+                       newI = rep(0, length(newR))),
+          calculate = FALSE
+        )
+      ),
+      MCMC = NA,
+      Samples = NA
+    )
+    )
+  }
+  else if(is.null(newR)){
+    tempCode <- nimble::nimbleCode({
+      # Set priors
+      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
+      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
+      # likelihood
+      S[1] <- Pop - 1
+      I[1] <- 1
+      for(i in 1:TimePeriod){
+        newI[i] ~ dbinom(size = S[i],
+                         prob =  probGen(I[i]*Beta*t.step))
+        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
+        S[i+1] <- S[i] - newI[i]
+        I[i+1] <- I[i] + newI[i] - newR[i]
+      }
+    })
+    return(newRSIRclass(
+      Model = nimble::compileNimble(
+        nimble::nimbleModel(
+          code = tempCode,
+          constants = list(TimePeriod = length(newI)),
+          data = list(newI = newI,
+                      Pop = N,
+                      t.step = t.step,
+                      BetaShape = 1,
+                      BetaRate = 1,
+                      GammaShape = 1,
+                      GammaRate = 1),
+          inits = list(Beta = 1,
+                       Gamma = 1,
+                       newR = rep(0, length(newI))),
+          calculate = FALSE
+        )
+      ),
+      MCMC = NA
+    )
+    )
   }
   else{
-    return(dataGen(SIRclass(S = S,
-                            I = I,
-                            R = R,
-                            newI = newI,
-                            newR = newR,
-                            N = N,
-                            Beta = Beta,
-                            Gamma = Gamma,
-                            t.step = t.step,
-                            acceptance = 0,
-                            attempts = 0)))
-
+    tempCode <- nimble::nimbleCode({
+      # Set priors
+      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
+      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
+      # likelihood
+      for(i in 1:TimePeriod){
+        newI[i] ~ dbinom(size = S[i],
+                         prob =  probGen(I[i]*Beta*t.step))
+        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
+      }
+    })
+    return(SIRclass(
+      Model = nimble::compileNimble(
+        nimble::nimbleModel(
+          code = tempCode,
+          constants = list(TimePeriod = length(newI)),
+          data = list(I = I,
+                      S = S,
+                      newI = newI,
+                      newR = newR,
+                      t.step = t.step,
+                      BetaShape = 1,
+                      BetaRate = 1,
+                      GammaShape = 1,
+                      GammaRate = 1),
+          inits = list(Beta = 1,
+                       Gamma = 1),
+          calculate = FALSE
+        )
+      ),
+      MCMC = NA,
+      Samples = NA
+    )
+    )
   }
 }
