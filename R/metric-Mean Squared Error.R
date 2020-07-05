@@ -13,7 +13,7 @@ meanSquaredError.SIR <- function(epiModel, trueValues){
 #'
 #'@export
 meanSquaredError.iSIR <- function(epiModel, trueValues){
-  Error <- meanSquared.SIR(epiModel, trueValues)
+  Error <- meanSquaredError.SIR(epiModel, trueValues)
   newIError <- mean(rowMeans((epiModel@Samples[,-c(1,2)] - matrix(trueValues$newI,
                                       nrow = nrow(epiModel@Samples),
                                       ncol = length(trueValues$newI),
@@ -23,5 +23,5 @@ meanSquaredError.iSIR <- function(epiModel, trueValues){
 #'
 #'@export
 meanSquaredError.rSIR <- function(epiModel, trueValues){
-  return(meanSquared.iSIR(epiModel, trueValues))
+  return(meanSquaredError.iSIR(epiModel, trueValues))
 }
