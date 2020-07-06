@@ -13,18 +13,10 @@ metropolisHastings <- function(epiModel,
                                samples = 1000,
                                burnin = 500,
                                thin = 10){
-  UseMethod("metropolisHastings", epiModel)
-}
-#'
-#' @export
-metropolisHastings.SIR <- function(epiModel,
-                                  hyperParameters,
-                                  samples = 1000,
-                                  burnin = 500,
-                                  thin = 10){
   epiModel <- initialValues(epiModel, hyperParameters)
   epiModel@MCMC <- buildMCMCInternal(epiModel, hyperParameters)
   epiModel@MCMC$run(niter = samples, nburnin = burnin, thin = thin)
   epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
   return(epiModel)
 }
+
