@@ -14,7 +14,7 @@ return(c(BetaProb, GammaProb))
 #'@export
 acceptanceProb.iSIR <- function(epiModel){
   BetaGammaProbs <- acceptanceProb.SIR(epiModel)
-  StepProb <- sum(rowSums(diff(epiModel@Samples[,-c(1,2)])^2)/2)/(nrow(epiModel@Samples) - 1)
+  StepProb <- sum(rowSums(diff(epiModel@Samples[,-c(1,2)])!=0)/2)/(nrow(epiModel@Samples) - 1)
   return(c(BetaGammaProbs, StepProb))
 }
 acceptanceProb.rSIR <- function(epiModel){
