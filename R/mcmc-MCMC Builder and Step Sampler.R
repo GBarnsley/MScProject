@@ -25,37 +25,45 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
     setup = function(model, mvSaved, target, control) {
       minStep <- as.integer(control$`Minimum Step Size`)
       maxStep <- as.integer(control$`Maximum Step Size`)
+      maxChange <- as.integer(control$`Maximum Change`)
       calcNodes <- model$getDependencies(target)
     },
     ## the run function
     run = function() {
       positions <- which(model[[target]]!=0)
-      prob <- rep(1/length(positions), length(positions))
       pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
       position <- positions[pos]
-      
+
       directions <- c(-1,1)
       pos <- rcat(n = 1, prob = rep(1/length(directions), length(directions)))
       direction <- directions[pos]
-      
+
       sizes <- minStep:maxStep
       pos <- rcat(n = 1, prob = rep(1/length(sizes), length(sizes)))
       size <- sizes[pos]
-      
+
+      amounts <- 1:min(maxChange, model[[target]][position])
+      pos <- rcat(n = 1, prob = rep(1/length(amounts), length(amounts)))
+      amount <- amounts[pos]
+
       newPosition <- position + direction*size
-      
+
       if(newPosition > 0 & newPosition <= length(model[[target]])){
         model_lp_initial <- getLogProb(model, calcNodes)
-        
-        logProbForward <- -log(sum(model[[target]]!=0)) - log(model[[target]][position])
-        model[[target]][position] <<- model[[target]][position] - 1
-        model[[target]][newPosition] <<- model[[target]][newPosition] + 1
-        logProbBackward <- -log(sum(model[[target]]!=0)) - log(model[[target]][newPosition])
-        
+
+        logProbForward <- -log(sum(model[[target]]!=0)) -
+          log(min(maxChange, model[[target]][position])) -
+          log(model[[target]][position]) #This part is questionable
+        model[[target]][position] <<- model[[target]][position] - amount
+        model[[target]][newPosition] <<- model[[target]][newPosition] + amount
+        logProbBackward <- -log(sum(model[[target]]!=0)) -
+          log(min(maxChange, model[[target]][newPosition])) -
+          log(model[[target]][newPosition]) #This part is questionable
+
         model_lp_proposed <- calculate(model, calcNodes)
-        
+
         log_MH_ratio <- model_lp_proposed - model_lp_initial + logProbBackward - logProbForward
-        
+
         u <- runif(1, 0, 1)
         if(u < exp(log_MH_ratio)){
           jump <- TRUE
@@ -87,9 +95,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
                     type = stepSampler,
                     control = list(`Minimum Step Size` = hyperParameters$`Step Proposal`$`Minimum Step Size`,
                                    `Maximum Step Size` = hyperParameters$`Step Proposal`$`Maximum Step Size`,
-                                   `Number of possible steps` =
-                                     hyperParameters$`Step Proposal`$`Maximum Step Size` -
-                                     hyperParameters$`Step Proposal`$`Minimum Step Size` + 1))
+                                   `Maximum Change` = hyperParameters$`Step Proposal`$`Maximum Change`))
   output$addMonitors(c('Beta', 'Gamma', 'newI'))
   output <- buildMCMC(
     output
@@ -105,37 +111,44 @@ buildMCMCInternal.rSIR <- function(epiModel, hyperParameters){
     setup = function(model, mvSaved, target, control) {
       minStep <- as.integer(control$`Minimum Step Size`)
       maxStep <- as.integer(control$`Maximum Step Size`)
+      maxChange <- as.integer(control$`Maximum Change`)
       calcNodes <- model$getDependencies(target)
     },
     ## the run function
     run = function() {
       positions <- which(model[[target]]!=0)
-      prob <- rep(1/length(positions), length(positions))
       pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
       position <- positions[pos]
-      
+
       directions <- c(-1,1)
       pos <- rcat(n = 1, prob = rep(1/length(directions), length(directions)))
       direction <- directions[pos]
-      
+
       sizes <- minStep:maxStep
       pos <- rcat(n = 1, prob = rep(1/length(sizes), length(sizes)))
       size <- sizes[pos]
-      
+
+      amounts <- 1:min(maxChange, model[[target]][position])
+      pos <- rcat(n = 1, prob = rep(1/length(amounts), length(amounts)))
+      amount <- amounts[pos]
+
       newPosition <- position + direction*size
-      
+
       if(newPosition > 0 & newPosition <= length(model[[target]])){
         model_lp_initial <- getLogProb(model, calcNodes)
-        
-        logProbForward <- -log(sum(model[[target]]!=0)) - log(model[[target]][position])
+
+        logProbForward <- -log(length(positions)) -
+          log(length(amounts)) -
+          log(model[[target]][position]) #This part is questionable
         model[[target]][position] <<- model[[target]][position] - 1
         model[[target]][newPosition] <<- model[[target]][newPosition] + 1
-        logProbBackward <- -log(sum(model[[target]]!=0)) - log(model[[target]][newPosition])
-        
+        logProbBackward <- -log(sum(model[[target]]!=0)) -
+          log(min(maxChange, model[[target]][newPosition])) -
+          log(model[[target]][newPosition]) #This part is questionable
         model_lp_proposed <- calculate(model, calcNodes)
-        
+
         log_MH_ratio <- model_lp_proposed - model_lp_initial + logProbBackward - logProbForward
-        
+
         u <- runif(1, 0, 1)
         if(u < exp(log_MH_ratio)){
           jump <- TRUE
@@ -167,9 +180,7 @@ buildMCMCInternal.rSIR <- function(epiModel, hyperParameters){
                     type = stepSampler,
                     control = list(`Minimum Step Size` = hyperParameters$`Step Proposal`$`Minimum Step Size`,
                                    `Maximum Step Size` = hyperParameters$`Step Proposal`$`Maximum Step Size`,
-                                   `Number of possible steps` =
-                                     hyperParameters$`Step Proposal`$`Maximum Step Size` -
-                                     hyperParameters$`Step Proposal`$`Minimum Step Size` + 1))
+                                   `Maximum Change` = hyperParameters$`Step Proposal`$`Maximum Change`))
   output$addMonitors(c('Beta', 'Gamma', 'newIR'))
   output <- buildMCMC(
     output
