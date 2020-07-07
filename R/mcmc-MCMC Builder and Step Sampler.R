@@ -52,13 +52,13 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         model_lp_initial <- getLogProb(model, calcNodes)
 
         logProbForward <- -log(sum(model[[target]]!=0)) -
-          log(min(maxChange, model[[target]][position])) -
-          log(model[[target]][position]) #This part is questionable
+          log(min(maxChange, model[[target]][position])) #-
+          #log(model[[target]][position]) #This part is questionable
         model[[target]][position] <<- model[[target]][position] - amount
         model[[target]][newPosition] <<- model[[target]][newPosition] + amount
         logProbBackward <- -log(sum(model[[target]]!=0)) -
-          log(min(maxChange, model[[target]][newPosition])) -
-          log(model[[target]][newPosition]) #This part is questionable
+          log(min(maxChange, model[[target]][newPosition])) #-
+          #log(model[[target]][newPosition]) #This part is questionable
 
         model_lp_proposed <- calculate(model, calcNodes)
 
@@ -138,13 +138,13 @@ buildMCMCInternal.rSIR <- function(epiModel, hyperParameters){
         model_lp_initial <- getLogProb(model, calcNodes)
 
         logProbForward <- -log(length(positions)) -
-          log(length(amounts)) -
-          log(model[[target]][position]) #This part is questionable
+          log(length(amounts)) #-
+          #log(model[[target]][position]) #This part is questionable
         model[[target]][position] <<- model[[target]][position] - 1
         model[[target]][newPosition] <<- model[[target]][newPosition] + 1
         logProbBackward <- -log(sum(model[[target]]!=0)) -
-          log(min(maxChange, model[[target]][newPosition])) -
-          log(model[[target]][newPosition]) #This part is questionable
+          log(min(maxChange, model[[target]][newPosition])) #-
+          #log(model[[target]][newPosition]) #This part is questionable
         model_lp_proposed <- calculate(model, calcNodes)
 
         log_MH_ratio <- model_lp_proposed - model_lp_initial + logProbBackward - logProbForward
