@@ -1,10 +1,10 @@
-library(nimble)
 SIRclass <- setClass(
   "SIR",
   slots = c(
     Model = "ANY",
     MCMC = "ANY",
-    Samples = "ANY"
+    Samples = "ANY",
+    Metrics = "ANY"
     )
 )
 newISIRclass <- setClass(
@@ -106,7 +106,8 @@ SIR <- function(S = NULL,
         )
       ),
       MCMC = NA,
-      Samples = NA
+      Samples = NA,
+      Metrics = NA
     )
     )
   }
@@ -144,7 +145,9 @@ SIR <- function(S = NULL,
           calculate = FALSE
         )
       ),
-      MCMC = NA
+      MCMC = NA,
+      Samples = NA,
+      Metrics = NA
     )
     )
   }
@@ -180,7 +183,8 @@ SIR <- function(S = NULL,
         )
       ),
       MCMC = NA,
-      Samples = NA
+      Samples = NA,
+      Metrics = NA
     )
     )
   }
