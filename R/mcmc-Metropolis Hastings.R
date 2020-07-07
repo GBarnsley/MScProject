@@ -13,21 +13,28 @@ metropolisHastings <- function(epiModel,
                                samples = 1000,
                                burnin = 500,
                                thin = 10,
+                               Evaluate = FALSE,
                                trueValues = NA){
   epiModel <- initialValues(epiModel, hyperParameters)
   epiModel@MCMC <- buildMCMCInternal(epiModel, hyperParameters)
-  epiModel@MCMC$run(niter = samples*thin + burnin)
-  epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
-  epiModel@Metrics <- list(
-    `Acceptance Probabilities` = acceptanceProb(epiModel),
-    `Mean Squared Jumping Distance` = meanSquaredJumping(epiModel)
-  )
-  if(!is.na(trueValues)){
-    epiModel@Metrics$`Mean Mean Squared Error` <- meanSquaredError(epiModel,
-                                                                   trueValues)
+  if(Evaluate){
+    epiModel@MCMC$run(niter = samples*thin + burnin)
+    epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
+    epiModel@Metrics <- list(
+      `Acceptance Probabilities` = acceptanceProb(epiModel),
+      `Mean Squared Jumping Distance` = meanSquaredJumping(epiModel)
+    )
+    if(!is.na(trueValues)){
+      epiModel@Metrics$`Mean Mean Squared Error` <- meanSquaredError(epiModel,
+                                                                     trueValues)
+    }
+    epiModel@Samples <- epiModel@Samples[(burnin+1):(samples*thin + burnin),]
+    epiModel@Samples <- epiModel@Samples[seq(1, samples*thin, thin),]
+    return(epiModel)
   }
-  epiModel@Samples <- epiModel@Samples[(burnin+1):(samples*thin + burnin),]
-  epiModel@Samples <- epiModel@Samples[seq(1, samples*thin, thin),]
-  return(epiModel)
+  else{
+    epiModel@MCMC$run(niter = samples*thin + burnin, thin = thin, nburnin = burnin)
+    epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
+    }
 }
 
