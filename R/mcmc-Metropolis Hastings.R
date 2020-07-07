@@ -35,6 +35,7 @@ metropolisHastings <- function(epiModel,
   else{
     epiModel@MCMC$run(niter = samples*thin + burnin, thin = thin, nburnin = burnin)
     epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
+    return(epiModel)
     }
 }
 
