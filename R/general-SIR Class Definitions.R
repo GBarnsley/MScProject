@@ -71,22 +71,26 @@ SIR <- function(S = NULL,
     newR <- diff(R)
   }
   #Setting up models based on nulls
+  tempCode <- nimble::nimbleCode({
+    # Ultilities
+    Ultilities[1,1:3] <- tracers[1,1:3]
+    Ultilities[2,1:3] <- tracers[2,1:3]
+    Ultilities[3,1:3] <- tracers[3,1:3]
+    # Set priors
+    Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
+    Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
+    # likelihood
+    S[1] <- Pop - 1
+    I[1] <- 1
+    for(i in 1:TimePeriod){
+      newI[i] ~ dbinom(size = S[i],
+                       prob =  probGen(I[i]*Beta*t.step))
+      newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
+      S[i+1] <- S[i] - newI[i]
+      I[i+1] <- I[i] + newI[i] - newR[i]
+    }
+  })
   if(is.null(newI)){
-    tempCode <- nimble::nimbleCode({
-      # Set priors
-      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
-      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
-      # likelihood
-      S[1] <- Pop - 1
-      I[1] <- 1
-      for(i in 1:TimePeriod){
-        newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step))
-        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
-        S[i+1] <- S[i] - newI[i]
-        I[i+1] <- I[i] + newI[i] - newR[i]
-      }
-    })
     return(newISIRclass(
       Model = nimble::compileNimble(
         nimble::nimbleModel(
@@ -101,7 +105,12 @@ SIR <- function(S = NULL,
                       GammaRate = 1),
           inits = list(Beta = 1,
                        Gamma = 1,
-                       newI = rep(0, length(newR))),
+                       newI = rep(0, length(newR)),
+                       tracers = matrix(0,
+                                           nrow = 3,
+                                           ncol = 3
+                       )
+                       ),
           calculate = FALSE
         )
       ),
@@ -112,21 +121,6 @@ SIR <- function(S = NULL,
     )
   }
   else if(is.null(newR)){
-    tempCode <- nimble::nimbleCode({
-      # Set priors
-      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
-      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
-      # likelihood
-      S[1] <- Pop - 1
-      I[1] <- 1
-      for(i in 1:TimePeriod){
-        newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step))
-        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
-        S[i+1] <- S[i] - newI[i]
-        I[i+1] <- I[i] + newI[i] - newR[i]
-      }
-    })
     return(newRSIRclass(
       Model = nimble::compileNimble(
         nimble::nimbleModel(
@@ -141,7 +135,11 @@ SIR <- function(S = NULL,
                       GammaRate = 1),
           inits = list(Beta = 1,
                        Gamma = 1,
-                       newR = rep(0, length(newI))),
+                       newR = rep(0, length(newI)),
+                       evaluation = matrix(0,
+                                           nrow = 3,
+                                           ncol = 3)
+                       ),
           calculate = FALSE
         )
       ),
@@ -153,6 +151,10 @@ SIR <- function(S = NULL,
   }
   else{
     tempCode <- nimble::nimbleCode({
+       #Ultilities
+      Ultilities[1,1:2] <- tracers[1,1:2]
+      Ultilities[2,1:2] <- tracers[2,1:2]
+      Ultilities[3,1:2] <- tracers[3,1:2]
       # Set priors
       Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
       Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
@@ -178,7 +180,12 @@ SIR <- function(S = NULL,
                       GammaShape = 1,
                       GammaRate = 1),
           inits = list(Beta = 1,
-                       Gamma = 1),
+                       Gamma = 1,
+                       tracers = matrix(0,
+                                           nrow = 3,
+                                           ncol = 2
+                       )
+                       ),
           calculate = FALSE
         )
       ),
@@ -189,3 +196,4 @@ SIR <- function(S = NULL,
     )
   }
 }
+

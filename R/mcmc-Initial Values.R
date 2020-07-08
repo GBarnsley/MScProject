@@ -33,6 +33,9 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   for(i in 1:(length(epiModel@Model$newR)-1)){
     epiModel@Model$newI[i] <- epiModel@Model$newR[i+1]
   }
+  if(epiModel@Model$newR[1] != 0){
+    epiModel@Model$newI[1] <- epiModel@Model$newI[1] + epiModel@Model$newR[1]
+  }
   if(sum(epiModel@Model$newI) == epiModel@Model$Pop){
     epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] <-
       epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] - 1
