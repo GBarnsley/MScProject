@@ -41,13 +41,6 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
       epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] - 1
   }
   epiModel@Model$calculate()
-  epiModel@Model$newI[length(epiModel@Model$newR)] <- rbinom(1,
-                                                             epiModel@Model$S[length(epiModel@Model$newR)],
-                                                             probGen(epiModel@Model$t.step*
-                                                                       epiModel@Model$I[length(epiModel@Model$newR)]*
-                                                                       epiModel@Model$Beta)
-                                                             ) #THis part needs some work!! probably add parameter in to be size of epidemic etc. + prior?
-  epiModel@Model$calculate()
   return(
     epiModel
   )
@@ -65,7 +58,7 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
   epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
   epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
   epiModel@Model$newR[1] <- 0
-  for(i in 2:epiModel@Model$TimePeriod){
+  for(i in 2:length(epiModel@Model$newI)){
     epiModel@Model$newR[i] <- epiModel@Model$newI[i-1]
   }
   epiModel@Model$calculate()

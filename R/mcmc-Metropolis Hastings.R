@@ -19,6 +19,13 @@ metropolisHastings <- function(epiModel,
   epiModel@Samples <- as.matrix(epiModel@MCMC$mvSamples)
   epiModel@Metrics <- epiModel@Model$tracers/(samples*thin + burnin)
   row.names(epiModel@Metrics) <- c("Acceptance Probability", "Mean Squared Jump Distance", "Mean Squared Error")
+  if(identical(NULL, hyperParameters$`True Values`)){
+    epiModel@Metrics[3,1:ncol(epiModel@Metrics)] <- rep(NA, ncol(epiModel@Metrics))
+  }
+  else{
+    epiModel@Metrics[3,1:ncol(epiModel@Metrics)] <- sqrt(epiModel@Metrics[3,1:ncol(epiModel@Metrics)])
+  }
+  epiModel@Metrics[2,1:ncol(epiModel@Metrics)] <- sqrt(epiModel@Metrics[2,1:ncol(epiModel@Metrics)])
   return(epiModel)
 }
 

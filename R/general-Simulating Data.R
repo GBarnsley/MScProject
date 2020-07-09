@@ -31,8 +31,8 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = 100, seed = NA
   )
   for(i in 1:N){
     tempEpidemic$simulate()
-    output$training[[i]] <- tempEpidemic$newR
-    output$test[[i]] <- tempEpidemic$newI
+    output$newR[[i]] <- tempEpidemic$newR
+    output$newI[[i]] <- tempEpidemic$newI
   }
   return(output)
 }

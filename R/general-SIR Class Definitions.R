@@ -136,7 +136,7 @@ SIR <- function(S = NULL,
           inits = list(Beta = 1,
                        Gamma = 1,
                        newR = rep(0, length(newI)),
-                       evaluation = matrix(0,
+                       tracers = matrix(0,
                                            nrow = 3,
                                            ncol = 3)
                        ),
