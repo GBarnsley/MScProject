@@ -1,10 +1,16 @@
 #' Generates Many Simulated Epidemics for the SIR class
 #' @export
-simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = 100, seed = NA){
+simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = 100, seed = NA, Density = FALSE){
   output <- list(training = list(),
                  test = list())
   if(!is.na(seed)){
     set.seed(seed)
+  }
+  if(Density){
+    Density <- 1
+  }
+  else{
+    Density <- 0
   }
   tempCode <- nimble::nimbleCode({
     # likelihood
@@ -12,7 +18,7 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = 100, seed = NA
     I[1] <- 1
     for(i in 1:TimePeriod){
       newI[i] ~ dbinom(size = S[i],
-                       prob =  probGen(I[i]*Beta*t.step))
+                       prob =  probGen(I[i]*Beta*t.step/(Pop^Density)))
       newR[i] ~ dbinom(size = I[i],
                        prob =  probGen(Gamma*t.step))
       S[i+1] <- S[i] - newI[i]
@@ -26,7 +32,8 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = 100, seed = NA
       data = list(Pop = Pop,
                   Beta = Beta,
                   Gamma = Gamma,
-                  t.step = t.step)
+                  t.step = t.step,
+                  Density = Density)
     )
   )
   for(i in 1:N){
