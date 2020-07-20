@@ -53,12 +53,12 @@ SIR <- function(S = NULL,
   if(is.null(S)&!is.null(newI)){
     S <- rep(N-1, length(newI) + 1)
     for(i in 2:length(S)){
-      S[i] <- N - sum(newI[1:i-1])
+      S[i] <- N - 1 - sum(newI[1:i-1])
     }
   }
   if(is.null(R)&!is.null(newR)){
     R <- rep(0, length(newR) + 1)
-    for(i in 2:(length(R)-1)){
+    for(i in 2:length(R)){
       R[i] <- sum(newR[1:i-1])
     }
   }
@@ -189,7 +189,7 @@ SIR <- function(S = NULL,
                       GammaShape = 1,
                       GammaRate = 1,
                       Density = Density,
-                     Pop = N),
+                      Pop = N),
           inits = list(Beta = 1,
                        Gamma = 1,
                        tracers = matrix(0,
