@@ -17,11 +17,22 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
       pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
       position <- positions[pos]
 
-      directions <- c(-1,1)
-      pos <- rcat(n = 1, prob = rep(1/length(directions), length(directions)))
-      direction <- directions[pos]
+      if(position == length(model[[target]])){
+        directions <- c(-1)
+        direction <- -1
+      }
+      else if(position == 1){
+        directions <- c(1)
+        direction <- 1
+      }
+      else{
+        directions <- c(-1,1)
+        pos <- rcat(n = 1, prob = c(0.5,0.5))
+        direction <- directions[pos]
+      }
 
-      sizes <- minStep:maxStep
+      sizes <- minStep:min(maxStep, (position - 1)*(direction == -1) +
+                             (length(model[[target]]) - position)*(direction == 1))
       pos <- rcat(n = 1, prob = rep(1/length(sizes), length(sizes)))
       size <- sizes[pos]
 
@@ -30,31 +41,49 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
 
       newPosition <- position + direction*size
 
-      if(newPosition > 0 & newPosition <= length(model[[target]])){
-        model_lp_initial <- getLogProb(model, calcNodes)
+      model_lp_initial <- getLogProb(model, calcNodes) -
+        (-
+          #probability of choosing that particular point
+          log(model[[target]][position]) -
+          #Choosing that time point
+          log(sum(model[[target]]!=0)) -
+          #choosing that that amount point of points to move
+          log(amounts) -
+          #Choosing the size of the move
+          log(length(sizes)) -
+          #choosing direction
+          log(length(directions))
+        )
+      model[[target]][position] <<- model[[target]][position] - amount
+      model[[target]][newPosition] <<- model[[target]][newPosition] + amount
+      model_lp_proposed <- calculate(model, calcNodes) -
+        (-
+          #probability of choosing that point in the reverse
+          log(model[[target]][newPosition]) -
+          #Choosing that time point
+          log(sum(model[[target]]!=0)) -
+          #choosing that that amount point of points to move
+          log(min(maxChange, model[[target]][newPosition])) -
+          #choosing the size of the move
+          log(min(
+            maxStep,
+            (newPosition - 1)*(-direction == -1) +
+              (length(model[[target]]) - newPosition)*(-direction == 1)
+            ) - minStep + 1) -
+          #choosing direction
+          log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
+        )
 
-        logProbForward <- -log(sum(model[[target]]!=0)) -
-          log(min(maxChange, model[[target]][position]))
-        model[[target]][position] <<- model[[target]][position] - amount
-        model[[target]][newPosition] <<- model[[target]][newPosition] + amount
-        logProbBackward <- -log(sum(model[[target]]!=0)) -
-          log(min(maxChange, model[[target]][newPosition]))
 
-        model_lp_proposed <- calculate(model, calcNodes)
+      log_MH_ratio <- model_lp_proposed - model_lp_initial
 
-        log_MH_ratio <- model_lp_proposed - model_lp_initial + logProbBackward - logProbForward
-
-        u <- runif(1, 0, 1)
-        if(u < exp(log_MH_ratio)){
-          model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
-                                                model[["tracers"]][2,evalCol] + size^2,
-                                                model[["tracers"]][3,evalCol] +
-                                                  mean((trueValue - model[[target]])^2))
-          jump <- TRUE
-        }
-        else{
-          jump <- FALSE
-        }
+      u <- runif(1, 0, 1)
+      if(u < exp(log_MH_ratio)){
+        model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
+                                              model[["tracers"]][2,evalCol] + size^2,
+                                              model[["tracers"]][3,evalCol] +
+                                                mean((trueValue - model[[target]])^2))
+        jump <- TRUE
       }
       else{
         jump <- FALSE
