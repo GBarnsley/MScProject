@@ -41,39 +41,36 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
 
       newPosition <- position + direction*size
 
-      model_lp_initial <- getLogProb(model, calcNodes) -
-        (-
-          #probability of choosing that particular point
-          log(model[[target]][position]) -
-          #Choosing that time point
-          log(sum(model[[target]]!=0)) -
-          #choosing that that amount point of points to move
-          log(amounts) -
-          #Choosing the size of the move
-          log(length(sizes)) -
-          #choosing direction
-          log(length(directions))
-        )
-      model[[target]][position] <<- model[[target]][position] - amount
-      model[[target]][newPosition] <<- model[[target]][newPosition] + amount
-      model_lp_proposed <- calculate(model, calcNodes) -
-        (-
-          #probability of choosing that point in the reverse
-          log(model[[target]][newPosition]) -
-          #Choosing that time point
-          log(sum(model[[target]]!=0)) -
-          #choosing that that amount point of points to move
-          log(min(maxChange, model[[target]][newPosition])) -
-          #choosing the size of the move
-          log(min(
-            maxStep,
-            (newPosition - 1)*(-direction == -1) +
-              (length(model[[target]]) - newPosition)*(-direction == 1)
-            ) - minStep + 1) -
-          #choosing direction
-          log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
-        )
-
+      model_lp_initial <- getLogProb(model, calcNodes) 
+    model_lp_proposed <- -
+      (-
+         #Choosing that time point
+         log(sum(model[[target]]!=0)) -
+         #choosing that that amount point of points to move
+         log(amounts) -
+         #Choosing the size of the move
+         log(length(sizes)) -
+         #choosing direction
+         log(length(directions))
+      )
+    model[[target]][position] <<- model[[target]][position] - amount
+    model[[target]][newPosition] <<- model[[target]][newPosition] + amount
+    model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes) 
+    model_lp_initial <- model_lp_initial -
+      (-
+         #Choosing that time point
+         log(sum(model[[target]]!=0)) -
+         #choosing that that amount point of points to move
+         log(min(maxChange, model[[target]][newPosition])) -
+         #choosing the size of the move
+         log(min(
+           maxStep,
+           (newPosition - 1)*(-direction == -1) +
+             (length(model[[target]]) - newPosition)*(-direction == 1)
+         ) - minStep + 1) -
+         #choosing direction
+         log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
+      )
 
       log_MH_ratio <- model_lp_proposed - model_lp_initial
 
