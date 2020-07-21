@@ -30,17 +30,31 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
   epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
   epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  for(i in 1:(length(epiModel@Model$newR)-1)){
-    epiModel@Model$newI[i] <- epiModel@Model$newR[i+1]
+  timePeriod <- length(epiModel@Model$newR)
+  epidemicSize <- sum(epiModel@Model$newR)
+  prob2 <- probGen(
+    epiModel@Model$Gamma * epiModel@Model$t.step
+  )
+  epiModel@Model$S[1] <- epiModel@Model$Pop - 1
+  epiModel@Model$I[1] <- 1
+  for(i in 1:(timePeriod-1)){
+    values <- max(epiModel@Model$newR[i] - epiModel@Model$I[i], 0):(epidemicSize - epiModel@Model$Pop + epiModel@Model$S[i])
+    densities <- rep(NA, length(values))
+    prob <-  probGen(
+      epiModel@Model$I[i]*epiModel@Model$Beta*epiModel@Model$t.step/(epiModel@Model$Pop^epiModel@Model$Density)
+    )
+    incompleteSize <- epiModel@Model$I[i] - epiModel@Model$newR[i]
+    for(j in 1:length(values)){
+      densities[j] <- dbinom(values[j], epiModel@Model$S[i], prob) +
+        dbinom(epiModel@Model$newR[i+1], incompleteSize + values[j], prob2)
+    }
+    epiModel@Model$newI[i] <- sample(values, 1, FALSE, prob = densities/sum(densities))
+    epiModel@Model$S[i+1] <- epiModel@Model$S[i] - epiModel@Model$newI[i]
+    epiModel@Model$I[i+1] <- epiModel@Model$I[i] + epiModel@Model$newI[i] - epiModel@Model$newR[i]
   }
-  if(epiModel@Model$newR[1] != 0){
-    epiModel@Model$newI[1] <- epiModel@Model$newI[1] + epiModel@Model$newR[1]
-  }
-  if(sum(epiModel@Model$newI) == epiModel@Model$Pop){
-    epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] <-
-      epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] - 1
-  }
-  epiModel@Model$calculate()
+  epiModel@Model$newI[timePeriod] <- 0
+  epiModel@Model$S[timePeriod + 1] <- epiModel@Model$S[timePeriod]
+  epiModel@Model$I[timePeriod + 1] <- epiModel@Model$I[timePeriod] - epiModel@Model$newR[i]
   return(
     epiModel
   )
@@ -57,12 +71,20 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
   epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
   epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
   epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  epiModel@Model$newR[1] <- 0
-  for(i in 2:length(epiModel@Model$newI)){
-    epiModel@Model$newR[i] <- epiModel@Model$newI[i-1]
+  timePeriod <- length(epiModel@Model$newI)
+  epidemicSize <- sum(epiModel$newI) + 1
+  epiModel@Model$I[1] <- 1
+  for(i in 1:timePeriod){
+    epiModel@Model$newR[i] <- rbinom(n = 1,
+                                            size = epiModel@Model$I[i],
+                                            prob = probGen(
+                                              epiModel@Model$Gamma*epiModel@Model$t.step
+                                            )
+    )
+    epiModel@Model$I[i+1] <- epiModel@Model$I[i] + epiModel@Model$newI[i] - epiModel@Model$newR[i]
   }
-  epiModel@Model$calculate()
   return(
     epiModel
   )
 }
+
