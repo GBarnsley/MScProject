@@ -239,6 +239,7 @@ buildMCMCInternal.SIR <- function(epiModel, hyperParameters){
 #'
 #'@export
 buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
+  if(!is.null(hyperParameters$newI$Bounded)){
   if(hyperParameters$newI$Bounded){
     stepSampler <- nimbleFunction(
       contains = sampler_BASE,
@@ -275,11 +276,11 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         pos <- rcat(n = 1, prob = rep(1/length(sizes), length(sizes)))
         size <- sizes[pos]
 
-        amounts <- min(maxChange, model[[target]][position],
-                       model$I[newPostion - 1/2 + direction/2]) #adding the bounded constraint based on newR
-        amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
-
         newPosition <- position + direction*size
+
+        amounts <- min(min(maxChange, model[[target]][position]),
+                       model[["I"]][newPosition + 1/2 - 1/2*direction]) #adding the bounded constraint based on newR
+        amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
 
         model_lp_initial <- getLogProb(model, calcNodes)
         model_lp_proposed <- -
@@ -301,7 +302,10 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
              #Choosing that time point
              log(sum(model[[target]]!=0)) -
              #choosing that that amount point of points to move
-             log(min(maxChange, model[[target]][newPosition])) -
+             log(min(
+               min(maxChange, model[[target]][newPosition]),
+               model[["I"]][position + 1/2 - 1/2*-direction]
+               )) -
              #choosing the size of the move
              log(min(
                maxStep,
@@ -339,7 +343,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         reset = function () {}
       )
     )
-  }
+  }}
   output <- configureMCMC(epiModel@Model, nodes = NULL)
   control <- buildControl(epiModel, hyperParameters, "Beta", 1)
   output$addSampler(target = 'Beta', type = sampler_RW_TRACER, control = control)
