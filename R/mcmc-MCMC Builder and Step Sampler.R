@@ -41,36 +41,37 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
 
       newPosition <- position + direction*size
 
-      model_lp_initial <- getLogProb(model, calcNodes) 
-    model_lp_proposed <- -
-      (-
-         #Choosing that time point
-         log(sum(model[[target]]!=0)) -
-         #choosing that that amount point of points to move
-         log(amounts) -
-         #Choosing the size of the move
-         log(length(sizes)) -
-         #choosing direction
-         log(length(directions))
-      )
-    model[[target]][position] <<- model[[target]][position] - amount
-    model[[target]][newPosition] <<- model[[target]][newPosition] + amount
-    model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes) 
-    model_lp_initial <- model_lp_initial -
-      (-
-         #Choosing that time point
-         log(sum(model[[target]]!=0)) -
-         #choosing that that amount point of points to move
-         log(min(maxChange, model[[target]][newPosition])) -
-         #choosing the size of the move
-         log(min(
-           maxStep,
-           (newPosition - 1)*(-direction == -1) +
-             (length(model[[target]]) - newPosition)*(-direction == 1)
-         ) - minStep + 1) -
-         #choosing direction
-         log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
-      )
+      model_lp_initial <- getLogProb(model, calcNodes)
+      model_lp_proposed <- -
+        (-
+           #Choosing that time point
+           log(sum(model[[target]]!=0)) -
+           #choosing that that amount point of points to move
+           log(amounts) -
+           #Choosing the size of the move
+           log(length(sizes)) -
+           #choosing direction
+           log(length(directions))
+        )
+      model[[target]][position] <<- model[[target]][position] - amount
+      model[[target]][newPosition] <<- model[[target]][newPosition] + amount
+      model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes)
+      model_lp_initial <- model_lp_initial -
+        (-
+           #Choosing that time point
+           log(sum(model[[target]]!=0)) -
+           #choosing that that amount point of points to move
+           log(min(maxChange, model[[target]][newPosition])) -
+           #choosing the size of the move
+           log(min(
+             maxStep,
+             (newPosition - 1)*(-direction == -1) +
+               (length(model[[target]]) - newPosition)*(-direction == 1)
+           ) - minStep + 1) -
+           #choosing direction
+           log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
+        )
+
 
       log_MH_ratio <- model_lp_proposed - model_lp_initial
 
@@ -238,6 +239,107 @@ buildMCMCInternal.SIR <- function(epiModel, hyperParameters){
 #'
 #'@export
 buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
+  if(hyperParameters$newI$Bounded){
+    stepSampler <- nimbleFunction(
+      contains = sampler_BASE,
+      setup = function(model, mvSaved, target, control) {
+        minStep <- as.integer(control$`Minimum Step Size`)
+        maxStep <- as.integer(control$`Maximum Step Size`)
+        maxChange <- as.integer(control$`Maximum Change`)
+        calcNodes <- model$getDependencies(target)
+        evalCol <- as.integer(control$Column)
+        trueValue <- control$True
+      },
+      ## the run function
+      run = function() {
+        positions <- which(model[[target]]!=0)
+        pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
+        position <- positions[pos]
+
+        if(position == length(model[[target]])){
+          directions <- c(-1)
+          direction <- -1
+        }
+        else if(position == 1){
+          directions <- c(1)
+          direction <- 1
+        }
+        else{
+          directions <- c(-1,1)
+          pos <- rcat(n = 1, prob = c(0.5,0.5))
+          direction <- directions[pos]
+        }
+
+        sizes <- minStep:min(maxStep, (position - 1)*(direction == -1) +
+                               (length(model[[target]]) - position)*(direction == 1))
+        pos <- rcat(n = 1, prob = rep(1/length(sizes), length(sizes)))
+        size <- sizes[pos]
+
+        amounts <- min(maxChange, model[[target]][position],
+                       model$I[newPostion - 1/2 + direction/2]) #adding the bounded constraint based on newR
+        amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
+
+        newPosition <- position + direction*size
+
+        model_lp_initial <- getLogProb(model, calcNodes)
+        model_lp_proposed <- -
+          (-
+             #Choosing that time point
+             log(sum(model[[target]]!=0)) -
+             #choosing that that amount point of points to move
+             log(amounts) -
+             #Choosing the size of the move
+             log(length(sizes)) -
+             #choosing direction
+             log(length(directions))
+          )
+        model[[target]][position] <<- model[[target]][position] - amount
+        model[[target]][newPosition] <<- model[[target]][newPosition] + amount
+        model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes)
+        model_lp_initial <- model_lp_initial -
+          (-
+             #Choosing that time point
+             log(sum(model[[target]]!=0)) -
+             #choosing that that amount point of points to move
+             log(min(maxChange, model[[target]][newPosition])) -
+             #choosing the size of the move
+             log(min(
+               maxStep,
+               (newPosition - 1)*(-direction == -1) +
+                 (length(model[[target]]) - newPosition)*(-direction == 1)
+             ) - minStep + 1) -
+             #choosing direction
+             log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
+          )
+
+
+        log_MH_ratio <- model_lp_proposed - model_lp_initial
+
+        u <- runif(1, 0, 1)
+        if(u < exp(log_MH_ratio)){
+          model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
+                                                model[["tracers"]][2,evalCol] + size^2,
+                                                model[["tracers"]][3,evalCol] +
+                                                  mean((trueValue - model[[target]])^2))
+          jump <- TRUE
+        }
+        else{
+          jump <- FALSE
+        }
+        ## if we accepted the proposal, then store the updated
+        ## values and logProbs from 'model' into 'mvSaved'.
+        ## if the proposal was not accepted, restore the values
+        ## and logProbs from 'mvSaved' back into 'model'.
+        if(jump) copy(from = model, to = mvSaved, row = 1,
+                      nodes = calcNodes, logProb = TRUE)
+        else copy(from = mvSaved, to = model, row = 1,
+                  nodes = calcNodes, logProb = TRUE)
+      },
+      methods = list(
+        reset = function () {}
+      )
+    )
+  }
   output <- configureMCMC(epiModel@Model, nodes = NULL)
   control <- buildControl(epiModel, hyperParameters, "Beta", 1)
   output$addSampler(target = 'Beta', type = sampler_RW_TRACER, control = control)
