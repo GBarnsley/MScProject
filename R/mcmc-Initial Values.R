@@ -41,7 +41,7 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
     values <- max(epiModel@Model$newR[i] - epiModel@Model$I[i], 0):(epidemicSize - epiModel@Model$Pop + epiModel@Model$S[i])
     densities <- rep(NA, length(values))
     prob <-  probGen(
-      epiModel@Model$I[i]*epiModel@Model$Beta*epiModel@Model$t.step/(epiModel@Model$Pop^epiModel@Model$Density)
+      epiModel@Model$I[i]*epiModel@Model$Beta*epiModel@Model$t.step/(epiModel@Model$Pop^epiModel@Model$Frequency)
     )
     incompleteSize <- epiModel@Model$I[i] - epiModel@Model$newR[i]
     for(j in 1:length(values)){
