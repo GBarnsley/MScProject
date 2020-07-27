@@ -44,7 +44,7 @@ SIR <- function(S = NULL,
                 Beta = NULL,
                 Gamma = NULL,
                 t.step = 1,
-                Density = FALSE){
+                Frequency = TRUE){
   #calculating initial values from given dataS
   if(is.null(N)){
     print("Error: N must be specified")
@@ -71,11 +71,11 @@ SIR <- function(S = NULL,
   if(is.null(newR)&!is.null(R)){
     newR <- diff(R)
   }
-  if(Density){
-    Density <- 1
+  if(Frequency){
+    Frequency <- 1
   }
   else{
-    Density <- 0
+    Frequency <- 0
   }
   #Setting up models based on nulls
   tempCode <- nimble::nimbleCode({
@@ -91,7 +91,7 @@ SIR <- function(S = NULL,
     I[1] <- 1
     for(i in 1:TimePeriod){
       newI[i] ~ dbinom(size = S[i],
-                       prob =  probGen(I[i]*Beta*t.step/(Pop^Density)))
+                       prob =  probGen(I[i]*Beta*t.step/(Pop^Frequency)))
       newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
       S[i+1] <- S[i] - newI[i]
       I[i+1] <- I[i] + newI[i] - newR[i]
@@ -110,7 +110,7 @@ SIR <- function(S = NULL,
                       BetaRate = 1,
                       GammaShape = 1,
                       GammaRate = 1,
-                      Density = Density),
+                      Frequency = Frequency),
           inits = list(Beta = 1,
                        Gamma = 1,
                        newI = rep(0, length(newR)),
@@ -141,7 +141,7 @@ SIR <- function(S = NULL,
                       BetaRate = 1,
                       GammaShape = 1,
                       GammaRate = 1,
-                      Density = Density),
+                      Frequency = Frequency),
           inits = list(Beta = 1,
                        Gamma = 1,
                        newR = rep(0, length(newI)),
@@ -170,7 +170,7 @@ SIR <- function(S = NULL,
       # likelihood
       for(i in 1:TimePeriod){
         newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step/(Pop^Density)))
+                         prob =  probGen(I[i]*Beta*t.step/(Pop^Frequency)))
         newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
       }
     })
@@ -188,7 +188,7 @@ SIR <- function(S = NULL,
                       BetaRate = 1,
                       GammaShape = 1,
                       GammaRate = 1,
-                      Density = Density,
+                      Frequency = Frequency,
                       Pop = N),
           inits = list(Beta = 1,
                        Gamma = 1,

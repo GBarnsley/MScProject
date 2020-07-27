@@ -1,7 +1,7 @@
 #' Generates Many Simulated Epidemics for the SIR class
 #' @param t.max The maximum length of time to run for, Ideally should be adjusted so that the number of incomplete epidemics is close to 0
 #' @export
-simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA, Density = FALSE){
+simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA, Frequency = TRUE){
   if(!is.na(seed)){
     set.seed(seed)
   }
@@ -11,7 +11,7 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA,
       I[1] <- 1
       for(i in 1:TimePeriod){
         newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step/(Pop^Density)))
+                         prob =  probGen(I[i]*Beta*t.step/(Pop^Frequency)))
         newR[i] ~ dbinom(size = I[i],
                          prob =  probGen(Gamma*t.step))
         S[i+1] <- S[i] - newI[i]
@@ -26,7 +26,7 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA,
                   Beta = Beta,
                   Gamma = Gamma,
                   t.step = t.step,
-                  Density = Density*1)
+                  Frequency = Frequency*1)
     ))
   output <- list(newI = vector("list", N),
                  newR = vector("list", N))
