@@ -40,14 +40,14 @@ simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA,
     }
     tempEpidemic$simulate()
     test <- tempEpidemic$I==0
-    if(any(test)&sum(test)<t.max-1){
+    if(sum(tempEpidemic$newI) < Pop/100){
+      failed <- failed + 1
+    }
+    else if(any(test)&sum(test)<t.max-1){
       successfull <- successfull + 1
       end <- min(which(tempEpidemic$I==0)) - 1
       output$newR[[successfull]] <- tempEpidemic$newR[1:end]
       output$newI[[successfull]] <- tempEpidemic$newI[1:end]
-    }
-    else if(sum(test) == 1){
-      failed <- failed + 1
     }
     else{
       unfinished <- unfinished + 1
