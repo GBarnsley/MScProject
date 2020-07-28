@@ -8,11 +8,13 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
       maxStep <- as.integer(control$`Maximum Step Size`)
       maxChange <- as.integer(control$`Maximum Change`)
       calcNodes <- model$getDependencies(target)
+      runs <- as.integer(control$`Runs per Random Walk`)
       evalCol <- as.integer(control$Column)
       trueValue <- control$True
     },
     ## the run function
     run = function() {
+      for(i in 1:runs){
       positions <- which(model[[target]]!=0)
       pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
       position <- positions[pos]
@@ -77,10 +79,10 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
 
       u <- runif(1, 0, 1)
       if(u < exp(log_MH_ratio)){
-        model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
-                                              model[["tracers"]][2,evalCol] + size^2,
+        model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1/runs,
+                                              model[["tracers"]][2,evalCol] + size^2/runs,
                                               model[["tracers"]][3,evalCol] +
-                                                mean((trueValue - model[[target]])^2))
+                                                mean((trueValue - model[[target]])^2)/runs)
         jump <- TRUE
       }
       else{
@@ -94,6 +96,7 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
                     nodes = calcNodes, logProb = TRUE)
       else copy(from = mvSaved, to = model, row = 1,
                 nodes = calcNodes, logProb = TRUE)
+      }
     },
     methods = list(
       reset = function () {}
@@ -247,12 +250,14 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         minStep <- as.integer(control$`Minimum Step Size`)
         maxStep <- as.integer(control$`Maximum Step Size`)
         maxChange <- as.integer(control$`Maximum Change`)
+        runs <- as.integer(control$`Runs per Random Walk`)
         calcNodes <- model$getDependencies(target)
         evalCol <- as.integer(control$Column)
         trueValue <- control$True
       },
       ## the run function
       run = function() {
+        for(i in 1:runs){
         positions <- which(model[[target]]!=0)
         pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
         position <- positions[pos]
@@ -278,8 +283,10 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
 
         newPosition <- position + direction*size
 
-        amounts <- min(min(maxChange, model[[target]][position]),
-                       model[["I"]][newPosition + 1/2 - 1/2*direction]) #adding the bounded constraint based on newR
+        amounts <- min(maxChange, model[[target]][position])
+        if(direction == 1){
+          amounts <- min(amounts, min(model[["I"]][(position + 1):newPosition]) - 1)
+        }
         amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
 
         model_lp_initial <- getLogProb(model, calcNodes)
@@ -297,15 +304,18 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         model[[target]][position] <<- model[[target]][position] - amount
         model[[target]][newPosition] <<- model[[target]][newPosition] + amount
         model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes)
+        amountBackward <- min(maxChange, model[[target]][newPosition])
+        if(direction == -1){
+          amountBackward <- min(amountBackward, min(model[["I"]][(newPosition + 1):position]) - 1)
+        }
         model_lp_initial <- model_lp_initial -
           (-
              #Choosing that time point
              log(sum(model[[target]]!=0)) -
              #choosing that that amount point of points to move
-             log(min(
-               min(maxChange, model[[target]][newPosition]),
-               model[["I"]][position + 1/2 - 1/2*-direction]
-               )) -
+             log(
+               amountBackward
+               ) -
              #choosing the size of the move
              log(min(
                maxStep,
@@ -321,10 +331,10 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
 
         u <- runif(1, 0, 1)
         if(u < exp(log_MH_ratio)){
-          model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
-                                                model[["tracers"]][2,evalCol] + size^2,
+          model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1/runs,
+                                                model[["tracers"]][2,evalCol] + size^2/runs,
                                                 model[["tracers"]][3,evalCol] +
-                                                  mean((trueValue - model[[target]])^2))
+                                                  mean((trueValue - model[[target]])^2)/runs)
           jump <- TRUE
         }
         else{
@@ -338,6 +348,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
                       nodes = calcNodes, logProb = TRUE)
         else copy(from = mvSaved, to = model, row = 1,
                   nodes = calcNodes, logProb = TRUE)
+        }
       },
       methods = list(
         reset = function () {}
