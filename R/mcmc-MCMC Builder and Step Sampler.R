@@ -258,6 +258,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
       },
       ## the run function
       run = function() {
+        model_lp_initial <- getLogProb(model, calcNodes)
         for(i in 1:runs){
         positions <- which(model[[target]]!=0)
         pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
@@ -290,8 +291,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         }
         amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
 
-        model_lp_initial <- getLogProb(model, calcNodes)
-        model_lp_proposed <- -
+        sampler_lp_proposed <-
           (-
              #Choosing that time point
              log(sum(model[[target]]!=0)) -
@@ -304,12 +304,12 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
           )
         model[[target]][position] <<- model[[target]][position] - amount
         model[[target]][newPosition] <<- model[[target]][newPosition] + amount
-        model_lp_proposed <- model_lp_proposed + calculate(model, calcNodes)
+        model_lp_proposed <- calculate(model, calcNodes)
         amountBackward <- min(maxChange, model[[target]][newPosition])
         if(direction == -1){
           amountBackward <- min(amountBackward, min(model[["I"]][(newPosition + 1):position]) - 1)
         }
-        model_lp_initial <- model_lp_initial -
+        sampler_lp_initial <-
           (-
              #Choosing that time point
              log(sum(model[[target]]!=0)) -
@@ -328,7 +328,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
           )
 
 
-        log_MH_ratio <- model_lp_proposed - model_lp_initial
+        log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
 
         u <- runif(1, 0, 1)
         if(u < exp(log_MH_ratio)){
@@ -336,6 +336,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
                                                 model[["tracers"]][2,evalCol] + size^2/runs,
                                                 model[["tracers"]][3,evalCol] +
                                                   mean((trueValue - model[[target]])^2)/runs)
+          model_lp_initial <- model_lp_proposed
           jump <- TRUE
         }
         else{
