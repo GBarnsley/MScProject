@@ -38,17 +38,28 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   epiModel@Model$S[1] <- epiModel@Model$Pop - 1
   epiModel@Model$I[1] <- 1
   for(i in 1:(timePeriod-1)){
-    values <- max(epiModel@Model$newR[i] - epiModel@Model$I[i], 0):(epidemicSize - epiModel@Model$Pop + epiModel@Model$S[i])
-    densities <- rep(NA, length(values))
-    prob <-  probGen(
-      epiModel@Model$I[i]*epiModel@Model$Beta*epiModel@Model$t.step/(epiModel@Model$Pop^epiModel@Model$Frequency)
-    )
-    incompleteSize <- epiModel@Model$I[i] - epiModel@Model$newR[i]
-    for(j in 1:length(values)){
-      densities[j] <- dbinom(values[j], epiModel@Model$S[i], prob) +
-        dbinom(epiModel@Model$newR[i+1], incompleteSize + values[j], prob2)
+    if(epiModel@Model$I[i] != 0 & epiModel@Model$S[i] != 0){
+      values <- max(epiModel@Model$newR[i] - epiModel@Model$I[i] + 1, epiModel@Model$newR[i+1] + epiModel@Model$newR[i] - epiModel@Model$I[i] + 1, 0):(epiModel@Model$S[i] - (epiModel@Model$Pop - epidemicSize))
+      if(length(values) > 1){
+        densities <- rep(NA, length(values))
+        prob <-  probGen(
+          epiModel@Model$I[i]*epiModel@Model$Beta*epiModel@Model$t.step/(epiModel@Model$Pop^epiModel@Model$Frequency)
+        )
+        incompleteSize <- epiModel@Model$I[i] - epiModel@Model$newR[i]
+        for(j in 1:length(values)){
+          densities[j] <- dbinom(values[j], epiModel@Model$S[i], prob, log = TRUE) +
+            dbinom(epiModel@Model$newR[i+1], incompleteSize + values[j], prob2, log = TRUE)
+        }
+        prob <- densityToProbability(densities)
+        epiModel@Model$newI[i] <- sample(values, 1, FALSE, prob = prob)
+      }
+      else{
+        epiModel@Model$newI[i] <- values[1]
+      }
     }
-    epiModel@Model$newI[i] <- sample(values, 1, FALSE, prob = densities/sum(densities))
+    else{
+      epiModel@Model$newI[i] <- 0
+    }
     epiModel@Model$S[i+1] <- epiModel@Model$S[i] - epiModel@Model$newI[i]
     epiModel@Model$I[i+1] <- epiModel@Model$I[i] + epiModel@Model$newI[i] - epiModel@Model$newR[i]
   }
@@ -87,4 +98,13 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
     epiModel
   )
 }
-
+#'
+#'@export
+densityToProbability <- function(densities, UB = 700, LB = 700){
+  maxValue <- max(densities)
+  scale <- UB - maxValue
+  densities <- densities + scale
+  prob <- rep(0, length(densities))
+  prob[densities >= LB] <- exp(densities[densities >= LB])
+  return(prob)
+}
