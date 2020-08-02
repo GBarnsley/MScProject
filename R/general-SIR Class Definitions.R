@@ -78,7 +78,7 @@ SIR <- function(S = NULL,
     Frequency <- 0
   }
   #Setting up models based on nulls
-  tempCode <- nimble::nimbleCode({
+  tempCode <- nimbleCode({
     # Ultilities
     Ultilities[1,1:3] <- tracers[1,1:3]
     Ultilities[2,1:3] <- tracers[2,1:3]
@@ -99,8 +99,8 @@ SIR <- function(S = NULL,
   })
   if(is.null(newI)){
     return(newISIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newR)),
           data = list(newR = newR,
@@ -130,8 +130,8 @@ SIR <- function(S = NULL,
   }
   else if(is.null(newR)){
     return(newRSIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newI)),
           data = list(newI = newI,
@@ -159,7 +159,7 @@ SIR <- function(S = NULL,
     )
   }
   else{
-    tempCode <- nimble::nimbleCode({
+    tempCode <- nimbleCode({
        #Ultilities
       Ultilities[1,1:2] <- tracers[1,1:2]
       Ultilities[2,1:2] <- tracers[2,1:2]
@@ -175,8 +175,8 @@ SIR <- function(S = NULL,
       }
     })
     return(SIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newI)),
           data = list(I = I,
