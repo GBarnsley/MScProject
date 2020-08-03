@@ -289,6 +289,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         if(direction == 1){
           amounts <- min(amounts, min(model[["I"]][(position + 1):newPosition]) - 1)
         }
+        if(amounts > 0){
         amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
 
         sampler_lp_proposed <-
@@ -309,6 +310,7 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
         if(direction == -1){
           amountBackward <- min(amountBackward, min(model[["I"]][(newPosition + 1):position]) - 1)
         }
+        if(amountBackward > 0){
         sampler_lp_initial <-
           (-
              #Choosing that time point
@@ -326,8 +328,6 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
              #choosing direction
              log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
           )
-
-
         log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
 
         u <- runif(1, 0, 1)
@@ -338,6 +338,14 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
                                                   mean((trueValue - model[[target]])^2)/runs)
           model_lp_initial <- model_lp_proposed
           jump <- TRUE
+        }
+        else{
+          jump <- FALSE
+        }
+        }
+        else{
+          jump <- FALSE
+        }
         }
         else{
           jump <- FALSE
