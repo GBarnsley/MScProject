@@ -85,11 +85,9 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
         log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
 
         u <- runif(1, 0, 1)
+        model[["tracers"]][1,evalCol] <<- model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs
         if(u < exp(log_MH_ratio)){
-          model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs,
-                                                model[["tracers"]][2,evalCol] + (size*amount)^2/runs,
-                                                model[["tracers"]][3,evalCol] +
-                                                  mean((trueValue - model[[target]])^2)/runs)
+          model[["tracers"]][2,evalCol] <<- model[["tracers"]][2,evalCol] + (size*amount)^2/runs
           model_lp_initial <- model_lp_proposed
           positions <- which(model[[target]]!=0)
           jump <- TRUE
@@ -105,6 +103,8 @@ buildMCMCInternal <- function(epiModel, hyperParameters){
                       nodes = calcNodes, logProb = TRUE)
         else copy(from = mvSaved, to = model, row = 1,
                   nodes = calcNodes, logProb = TRUE)
+        model[["tracers"]][3,evalCol] <<- model[["tracers"]][3,evalCol] +
+          mean((trueValue - model[[target]])^2)/runs
       }
     },
     methods = list(
@@ -388,12 +388,10 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
           )
           log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
 
+          model[["tracers"]][1,evalCol] <<- model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs
           u <- runif(1, 0, 1)
           if(u < exp(log_MH_ratio)){
-            model[["tracers"]][1:3,evalCol] <<- c(model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs,
-                                                model[["tracers"]][2,evalCol] + (size*amount)^2/runs,
-                                                model[["tracers"]][3,evalCol] +
-                                                  mean((trueValue - model[[target]])^2)/runs)
+            model[["tracers"]][2,evalCol] <<- model[["tracers"]][2,evalCol] + (size*amount)^2/runs
             model_lp_initial <- model_lp_proposed
             pointsToMove <- model[[target]]!=0
             for(i in 1:(length(model[[target]])-1)){
@@ -414,6 +412,8 @@ buildMCMCInternal.iSIR <- function(epiModel, hyperParameters){
                         nodes = calcNodes, logProb = TRUE)
           else copy(from = mvSaved, to = model, row = 1,
                     nodes = calcNodes, logProb = TRUE)
+          model[["tracers"]][3,evalCol] <<- model[["tracers"]][3,evalCol] +
+            mean((trueValue - model[[target]])^2)/runs
         }
       },
       methods = list(
