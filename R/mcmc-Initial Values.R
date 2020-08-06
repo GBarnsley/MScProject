@@ -39,7 +39,7 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   epiModel@Model$I[1] <- 1
   for(i in 1:(timePeriod-1)){
     if(epiModel@Model$I[i] != 0 & epiModel@Model$S[i] != 0){
-      values <- max(epiModel@Model$newR[i+1] + epiModel@Model$newR[i] - epiModel@Model$I[i], 0):(epiModel@Model$S[i] - (epiModel@Model$Pop - epidemicSize))
+      values <- max(epiModel@Model$newR[i+1] + epiModel@Model$newR[i] - epiModel@Model$I[i] + 1, 0):(epiModel@Model$S[i] - (epiModel@Model$Pop - epidemicSize))
       if(length(values) > 1){
         densities <- rep(NA, length(values))
         prob <-  probGen(
