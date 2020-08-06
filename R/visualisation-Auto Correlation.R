@@ -1,12 +1,12 @@
 #' A function that plots and prints ACF plots and effective sample size for samples from the
 #' metropolis hastings algorithm using the acf() function.
 #' @export
-acfSamples <- function(epiModel, plot, timePoints = NA){
+acfSamples <- function(epiModel, plot){
   UseMethod("acfSamples")
 }
 #' Method for SIR class, only plots for Beta and Gamma.
 #' @export
-acfSamples.SIR <- function(epiModel, plot = TRUE, timePoints){
+acfSamples.SIR <- function(epiModel, plot = TRUE){
   Beta <- acf(epiModel@Samples[,'Beta'], plot = FALSE)
   Gamma <- acf(epiModel@Samples[,'Gamma'], plot = FALSE)
   if(plot){
