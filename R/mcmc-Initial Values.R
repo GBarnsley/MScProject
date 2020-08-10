@@ -100,7 +100,7 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
 }
 #'
 #'@export
-densityToProbability <- function(densities, UB = 700, LB = 700){
+densityToProbability <- function(densities, UB = 700, LB = -700){
   maxValue <- max(densities)
   scale <- UB - maxValue
   densities <- densities + scale
