@@ -81,8 +81,7 @@ sampler_RW_block_TRACER_run <- function() {
         nimCopy(from = model, to = mvSaved, row = 1, nodes = calcNodesDepStageStoch)#, logProbOnly = TRUE)
         model[["tracers"]][1:2,evalCol] <<- c(model[["tracers"]][1,evalCol] + 1,
                                               model[["tracers"]][2,evalCol] +
-                                                sum((propValueVector - currentValueVector)^2))s
-        
+                                                sum((propValueVector - currentValueVector)^2))
       } else {
         nimCopy(from = mvSaved, to = model, row = 1, nodes = calcNodesProposalStage)#, logProb = TRUE)
         nimCopy(from = mvSaved, to = model, row = 1, nodes = calcNodesDepStageDeterm)#, logProb = FALSE)
