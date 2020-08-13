@@ -44,9 +44,9 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   mcmc$addSampler(target = "newI",
                     type = sampler,
                     control = list(
-                      `Maximum Step Size` = 20,
-                      `Maximum Change` = 20,
-                      `Runs per Random Walk` = hyperParameters$`Initial Values`$Runs,
+                      TMax = 20,
+                      DeltaMax = 20,
+                      R = hyperParameters$`Initial Values`$Runs,
                       Column = 1
                     ))
   mcmc <- buildMCMC(
@@ -76,9 +76,9 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
   mcmc$addSampler(target = "newR",
                   type = sampler,
                   control = list(
-                    `Maximum Step Size` = 20,
-                    `Maximum Change` = 20,
-                    `Runs per Random Walk` = hyperParameters$`Initial Values`$Runs,
+                    TMax = 20,
+                    DeltaMax = 20,
+                    R = hyperParameters$`Initial Values`$Runs,
                     Column = 1
                   ))
   mcmc <- buildMCMC(
