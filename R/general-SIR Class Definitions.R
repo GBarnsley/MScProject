@@ -80,9 +80,8 @@ SIR <- function(S = NULL,
   #Setting up models based on nulls
   tempCode <- nimbleCode({
     # Ultilities
-    Ultilities[1,1:3] <- tracers[1,1:3]
-    Ultilities[2,1:3] <- tracers[2,1:3]
-    Ultilities[3,1:3] <- tracers[3,1:3]
+    Ultilities[1,1:2] <- tracers[1,1:2]
+    Ultilities[2,1:2] <- tracers[2,1:2]
     # Set priors
     Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
     Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
@@ -115,8 +114,8 @@ SIR <- function(S = NULL,
                        Gamma = 1,
                        newI = rep(0, length(newR)),
                        tracers = matrix(0,
-                                           nrow = 3,
-                                           ncol = 3
+                                           nrow = 2,
+                                           ncol = 2
                        )
                        ),
           calculate = FALSE
@@ -146,8 +145,8 @@ SIR <- function(S = NULL,
                        Gamma = 1,
                        newR = rep(0, length(newI)),
                        tracers = matrix(0,
-                                           nrow = 3,
-                                           ncol = 3)
+                                           nrow = 2,
+                                           ncol = 2)
                        ),
           calculate = FALSE
         )
@@ -161,9 +160,8 @@ SIR <- function(S = NULL,
   else{
     tempCode <- nimbleCode({
        #Ultilities
-      Ultilities[1,1:2] <- tracers[1,1:2]
-      Ultilities[2,1:2] <- tracers[2,1:2]
-      Ultilities[3,1:2] <- tracers[3,1:2]
+      Ultilities[1,1] <- tracers[1,1]
+      Ultilities[2,1] <- tracers[2,1]
       # Set priors
       Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
       Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
@@ -193,8 +191,8 @@ SIR <- function(S = NULL,
           inits = list(Beta = 1,
                        Gamma = 1,
                        tracers = matrix(0,
-                                           nrow = 3,
-                                           ncol = 2
+                                           nrow = 2,
+                                           ncol = 1
                        )
                        ),
           calculate = FALSE
