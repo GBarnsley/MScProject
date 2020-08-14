@@ -54,6 +54,7 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   )
   mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
   mcmc$run(1)
+  epiModel@Model$tracers <- matrix(0, nrow = 2, ncol = 2)
   return(
     epiModel
   )
@@ -86,6 +87,7 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
   )
   mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
   mcmc$run(1)
+  epiModel@Model$tracers <- matrix(0, nrow = 2, ncol = 2)
   return(
     epiModel
   )
