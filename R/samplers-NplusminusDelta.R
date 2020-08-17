@@ -1,10 +1,10 @@
 #'
 #'@export
 stepSampler_setup <- function(model, mvSaved, target, control) {
-    maxStep <- as.integer(control$`Maximum Step Size`)
-    maxChange <- as.integer(control$`Maximum Change`)
-    calcNodes <- model$getDependencies(target)
-    runs <- as.integer(control$`Runs per Random Walk`)
+  maxStep <- as.integer(control$TMax)
+  maxChange <- as.integer(control$DeltaMax)
+  calcNodes <- model$getDependencies(target)
+  runs <- as.integer(control$R)
 }
 #'
 #'@export
