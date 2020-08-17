@@ -1,11 +1,10 @@
 #'
 #'@export
 stepSampler_setup <- function(model, mvSaved, target, control) {
-    maxStep <- as.integer(control$TMax)
-    maxChange <- as.integer(control$DeltaMax)
+    maxStep <- as.integer(control$`Maximum Step Size`)
+    maxChange <- as.integer(control$`Maximum Change`)
     calcNodes <- model$getDependencies(target)
-    runs <- as.integer(control$R)
-    evalCol <- as.integer(control$Column)
+    runs <- as.integer(control$`Runs per Random Walk`)
 }
 #'
 #'@export
@@ -38,15 +37,15 @@ stepSampler_run <- function() {
                    (length(model[[target]]) - position)*(direction == 1))
     #prevents moving further than the time frame of the epidemic
     size <- rcat(n = 1, prob = rep(1/sizes, sizes))
-    
+
     #the index of the position we are moving to
     newPosition <- position + direction*size
-    
+
     #choosing the number of points to move
     amounts <- min(maxChange, model[[target]][position])
     #stops us from moving more than the number of points at that time
     amount <- rcat(n = 1, prob = rep(1, amounts))
-    
+
     sampler_lp_proposed <-
       (-
          #Choosing that time point
@@ -61,7 +60,7 @@ stepSampler_run <- function() {
     model[[target]][position] <<- model[[target]][position] - amount
     model[[target]][newPosition] <<- model[[target]][newPosition] + amount
     model_lp_proposed <- calculate(model, calcNodes)
-    
+
     sampler_lp_initial <-
       (-
          #Choosing that time point
@@ -80,11 +79,9 @@ stepSampler_run <- function() {
          log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
       )
     log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
-    
+
     u <- runif(1, 0, 1)
-    model[["tracers"]][1,evalCol] <<- model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs
     if(u < exp(log_MH_ratio)){
-      model[["tracers"]][2,evalCol] <<- model[["tracers"]][2,evalCol] + (size*amount)^2/runs
       model_lp_initial <- model_lp_proposed
       positions <- which(model[[target]]!=0)
       jump <- TRUE
@@ -110,7 +107,7 @@ stepSampler_run_bounded <- function() {
   for(i in 1:runs){
     pos <- rcat(n = 1, prob = rep(1/length(positions), length(positions)))
     position <- positions[pos]
-    
+
     if(position == length(model[[target]])){
       directions <- c(-1)
       direction <- -1
@@ -124,20 +121,20 @@ stepSampler_run_bounded <- function() {
       pos <- rcat(n = 1, prob = c(0.5,0.5))
       direction <- directions[pos]
     }
-    
+
     sizes <- min(maxStep, (position - 1)*(direction == -1) +
                    (length(model[[target]]) - position)*(direction == 1))
     size <- rcat(n = 1, prob = rep(1, sizes))
-    
+
     newPosition <- position + direction*size
-    
+
     amounts <- min(maxChange, model[[target]][position])
     if(direction == 1){
       amounts <- min(amounts, min(model[["I"]][(position + 1):newPosition]) - 1)
     }
     if(amounts > 0){
       amount <- rcat(n = 1, prob = rep(1/amounts, amounts))
-      
+
       sampler_lp_proposed <-
         (-
            #Choosing that time point
@@ -175,11 +172,9 @@ stepSampler_run_bounded <- function() {
              log(1 + 1*(newPosition != length(model[[target]]) & newPosition != 1))
           )
         log_MH_ratio <- (model_lp_proposed - sampler_lp_proposed) - (model_lp_initial - sampler_lp_initial)
-        
+
         u <- runif(1, 0, 1)
-        model[["tracers"]][1,evalCol] <<- model[["tracers"]][1,evalCol] + min(exp(log_MH_ratio),1)/runs
         if(u < exp(log_MH_ratio)){
-          model[["tracers"]][2,evalCol] <<- model[["tracers"]][2,evalCol] + (size*amount)^2/runs
           model_lp_initial <- model_lp_proposed
           positions <- which(model[[target]]!=0)
           jump <- TRUE

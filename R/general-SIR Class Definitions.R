@@ -3,8 +3,7 @@ SIRclass <- setClass(
   slots = c(
     Model = "ANY",
     MCMC = "ANY",
-    Samples = "ANY",
-    Metrics = "ANY"
+    Samples = "ANY"
     )
 )
 newISIRclass <- setClass(
@@ -43,7 +42,8 @@ SIR <- function(S = NULL,
                 N = NULL,
                 Beta = NULL,
                 Gamma = NULL,
-                t.step = 1){
+                t.step = 1,
+                Frequency = TRUE){
   #calculating initial values from given dataS
   if(is.null(N)){
     print("Error: N must be specified")
@@ -52,13 +52,13 @@ SIR <- function(S = NULL,
   if(is.null(S)&!is.null(newI)){
     S <- rep(N-1, length(newI) + 1)
     for(i in 2:length(S)){
-      S[i] <- N - sum(newI[1:i-1])
+      S[i] <- N - 1 - sum(newI[1:(i-1)])
     }
   }
   if(is.null(R)&!is.null(newR)){
     R <- rep(0, length(newR) + 1)
-    for(i in 2:(length(R)-1)){
-      R[i] <- sum(newR[1:i-1])
+    for(i in 2:length(R)){
+      R[i] <- sum(newR[1:(i-1)])
     }
   }
   if(is.null(I)&!is.null(S)&!is.null(R)){
@@ -70,26 +70,32 @@ SIR <- function(S = NULL,
   if(is.null(newR)&!is.null(R)){
     newR <- diff(R)
   }
+  if(Frequency){
+    Frequency <- 1
+  }
+  else{
+    Frequency <- 0
+  }
   #Setting up models based on nulls
+  tempCode <- nimbleCode({
+    # Set priors
+    Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
+    Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
+    # likelihood
+    S[1] <- Pop - 1
+    I[1] <- 1
+    for(i in 1:TimePeriod){
+      newI[i] ~ dbinom(size = S[i],
+                       prob =  probGen(I[i]*Beta*t.step/(Pop^Frequency)))
+      newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
+      S[i+1] <- S[i] - newI[i]
+      I[i+1] <- I[i] + newI[i] - newR[i]
+    }
+  })
   if(is.null(newI)){
-    tempCode <- nimble::nimbleCode({
-      # Set priors
-      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
-      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
-      # likelihood
-      S[1] <- Pop - 1
-      I[1] <- 1
-      for(i in 1:TimePeriod){
-        newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step))
-        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
-        S[i+1] <- S[i] - newI[i]
-        I[i+1] <- I[i] + newI[i] - newR[i]
-      }
-    })
     return(newISIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newR)),
           data = list(newR = newR,
@@ -98,38 +104,24 @@ SIR <- function(S = NULL,
                       BetaShape = 1,
                       BetaRate = 1,
                       GammaShape = 1,
-                      GammaRate = 1),
+                      GammaRate = 1,
+                      Frequency = Frequency),
           inits = list(Beta = 1,
                        Gamma = 1,
-                       newI = rep(0, length(newR))),
+                       newI = rep(0, length(newR))
+                       ),
           calculate = FALSE
         )
       ),
       MCMC = NA,
-      Samples = NA,
-      Metrics = NA
+      Samples = NA
     )
     )
   }
   else if(is.null(newR)){
-    tempCode <- nimble::nimbleCode({
-      # Set priors
-      Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
-      Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
-      # likelihood
-      S[1] <- Pop - 1
-      I[1] <- 1
-      for(i in 1:TimePeriod){
-        newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step))
-        newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
-        S[i+1] <- S[i] - newI[i]
-        I[i+1] <- I[i] + newI[i] - newR[i]
-      }
-    })
     return(newRSIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newI)),
           data = list(newI = newI,
@@ -138,34 +130,35 @@ SIR <- function(S = NULL,
                       BetaShape = 1,
                       BetaRate = 1,
                       GammaShape = 1,
-                      GammaRate = 1),
+                      GammaRate = 1,
+                      Frequency = Frequency),
           inits = list(Beta = 1,
                        Gamma = 1,
-                       newR = rep(0, length(newI))),
+                       newR = rep(0, length(newI))
+                       ),
           calculate = FALSE
         )
       ),
       MCMC = NA,
-      Samples = NA,
-      Metrics = NA
+      Samples = NA
     )
     )
   }
   else{
-    tempCode <- nimble::nimbleCode({
+    tempCode <- nimbleCode({
       # Set priors
       Beta ~ dgamma(shape = BetaShape, rate = BetaRate)
       Gamma ~ dgamma(shape = GammaShape, rate = GammaRate)
       # likelihood
       for(i in 1:TimePeriod){
         newI[i] ~ dbinom(size = S[i],
-                         prob =  probGen(I[i]*Beta*t.step))
+                         prob =  probGen(I[i]*Beta*t.step/(Pop^Frequency)))
         newR[i] ~ dbinom(size = I[i], prob =  probGen(Gamma*t.step))
       }
     })
     return(SIRclass(
-      Model = nimble::compileNimble(
-        nimble::nimbleModel(
+      Model = compileNimble(
+        nimbleModel(
           code = tempCode,
           constants = list(TimePeriod = length(newI)),
           data = list(I = I,
@@ -176,16 +169,19 @@ SIR <- function(S = NULL,
                       BetaShape = 1,
                       BetaRate = 1,
                       GammaShape = 1,
-                      GammaRate = 1),
+                      GammaRate = 1,
+                      Frequency = Frequency,
+                      Pop = N),
           inits = list(Beta = 1,
-                       Gamma = 1),
+                       Gamma = 1
+                       ),
           calculate = FALSE
         )
       ),
       MCMC = NA,
-      Samples = NA,
-      Metrics = NA
+      Samples = NA
     )
     )
   }
 }
+
