@@ -1,4 +1,4 @@
-Package: EpiDataAug
+Package: EpiDataAugV2
 Title: Bayesian Data Augmentation for Epidemic Models
 Version: 0.0.0.9000
 Authors@R: 
