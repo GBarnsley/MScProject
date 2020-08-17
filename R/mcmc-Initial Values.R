@@ -1,14 +1,6 @@
 #' function that sets up initial values for MH algorithm.
 #' @export
 initialValues <- function(epiModel, hyperParameters){
-  sampler <- nimbleFunction(
-    contains = sampler_BASE,
-    setup = stepSampler_setup,
-    run = stepSampler_run,
-    methods = list(
-      reset = function() {}
-    )
-  )
   UseMethod("initialValues", epiModel)
 }
 #' Intial values for SIR model. Just sets Beta and Gamma to
@@ -38,23 +30,21 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
   epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
   epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
   epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  epiModel@Model$newI <- rep(0, length(epiModel@Model$newR))
-  epiModel@Model$newI[1] <- sum(epiModel@Model$newR) - 1
-  mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
-  mcmc$addSampler(target = "newI",
-                    type = sampler,
-                    control = list(
-                      TMax = 20,
-                      DeltaMax = 20,
-                      R = hyperParameters$`Initial Values`$Runs,
-                      Column = 1
-                    ))
-  mcmc <- buildMCMC(
-    mcmc
-  )
-  mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
-  mcmc$run(1)
-  epiModel@Model$tracers <- matrix(0, nrow = 2, ncol = 2)
+  for(i in 1:(length(epiModel@Model$newR)-1)){
+    epiModel@Model$newI[i] <- epiModel@Model$newR[i+1]
+  }
+  if(sum(epiModel@Model$newI) == epiModel@Model$Pop){
+    epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] <-
+      epiModel@Model$newI[max(which(epiModel@Model$newI!=0))] - 1
+  }
+  epiModel@Model$calculate()
+  epiModel@Model$newI[length(epiModel@Model$newR)] <- rbinom(1,
+                                                             epiModel@Model$S[length(epiModel@Model$newR)],
+                                                             probGen(epiModel@Model$t.step*
+                                                                       epiModel@Model$I[length(epiModel@Model$newR)]*
+                                                                       epiModel@Model$Beta)
+                                                             ) #THis part needs some work!! probably add parameter in to be size of epidemic etc. + prior?
+  epiModel@Model$calculate()
   return(
     epiModel
   )
@@ -71,23 +61,11 @@ initialValues.rSIR <- function(epiModel, hyperParameters){
   epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
   epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
   epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  epiModel@Model$newR <- rep(0, length(epiModel@Model$newI))
-  epiModel@Model$newR[length(epiModel@Model$newI)] <- sum(epiModel@Model$newI) + 1
-  mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
-  mcmc$addSampler(target = "newR",
-                  type = sampler,
-                  control = list(
-                    TMax = 20,
-                    DeltaMax = 20,
-                    R = hyperParameters$`Initial Values`$Runs,
-                    Column = 1
-                  ))
-  mcmc <- buildMCMC(
-    mcmc
-  )
-  mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
-  mcmc$run(1)
-  epiModel@Model$tracers <- matrix(0, nrow = 2, ncol = 2)
+  epiModel@Model$newR[1] <- 0
+  for(i in 2:epiModel@Model$TimePeriod){
+    epiModel@Model$newR[i] <- epiModel@Model$newI[i-1]
+  }
+  epiModel@Model$calculate()
   return(
     epiModel
   )
