@@ -57,6 +57,7 @@ stepSampler_run <- function() {
          #choosing direction
          log(length(directions))
       )
+    
     model[[target]][position] <<- model[[target]][position] - amount
     model[[target]][newPosition] <<- model[[target]][newPosition] + amount
     model_lp_proposed <- calculate(model, calcNodes)
@@ -114,7 +115,6 @@ stepSampler_run_bounded <- function() {
   jump <- FALSE
   
   for(i in 1:runs){
-    
     #Choose the original position
     pos <- rcat(n = 1, prob = rep(1, length(positions)))
     position <- positions[pos]
@@ -122,7 +122,6 @@ stepSampler_run_bounded <- function() {
     #Choosing the direction of the move
     directions <- canMoveBackward[position] + canMoveForward[position]
     direction <- c(-1,1)[rcat(n=1, prob = c(canMoveBackward[position], canMoveForward[position]))]
-    
     
     #Choosing the number of places to move
     if(direction == 1){
@@ -133,7 +132,7 @@ stepSampler_run_bounded <- function() {
         minAmounts[i] <- min(model[["I"]][(position + 1):(position + i)]) - 1
       }
       #if there is a value where amount <= 0
-      if(min(minAmounts) == 0){
+      if(min(minAmounts) <= 0){
         sizes <- min(which(minAmounts == 0)) - 1
         #then the step size before this occurs is our new maximum
       }
@@ -145,7 +144,6 @@ stepSampler_run_bounded <- function() {
     
     #the index of the position we are moving to
     newPosition <- position + direction*size
-    
     #choosing the number of points to move
     amounts <- min(maxChange, model[[target]][position])
     #stops us from moving more than the number of points at that time
@@ -154,7 +152,6 @@ stepSampler_run_bounded <- function() {
       #also bounded by the minimum amounts for that size, which has already been calculated
     }
     amount <- rcat(n = 1, prob = rep(1, amounts))
-    
     #the probability of generating this proposal
     sampler_lp_proposed <-
       (-
@@ -188,6 +185,7 @@ stepSampler_run_bounded <- function() {
         (model[["I"]][newPosition + 1] > 1)
       #is a forward move possible
     }
+    
     amountsRev <- min(maxChange, model[[target]][newPosition])
     if(direction == -1){
       amountsRev <- min(amountsRev, min(model[["I"]][(newPosition+1):(newPosition + size)]) - 1)
@@ -233,7 +231,6 @@ stepSampler_run_bounded <- function() {
         canMoveForward[i] <- model[["I"]][i+1] > 1
       }
       positions <- which(pointsToMove * (canMoveBackward + canMoveForward - canMoveBackward*canMoveForward))
-      
       jump <- TRUE
     }
     else{
