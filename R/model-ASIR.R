@@ -19,8 +19,8 @@ ASIR <- function(newR,
   tempCode <- nimbleCode({
     # Set priors
     wGamma <- (DGamma*detectedInfections + UGamma*hiddenInfections)/(detectedInfections + hiddenInfections)
-    Betas[1] ~ dnorm(mean = R0Means[1]*(wGamma*Pop^(Frequency == FALSE)), sd = R0SDs[1])
-    Betas[2] ~ dnorm(mean = R0Means[2]*(wGamma*Pop^(Frequency == FALSE)), sd = R0SDs[2])
+    Betas[1] ~ T(dnorm(mean = R0Means[1]*(wGamma*Pop^(Frequency == FALSE)), sd = R0SDs[1]), 0, Inf)
+    Betas[2] ~ T(dnorm(mean = R0Means[2]*(wGamma*Pop^(Frequency == FALSE)), sd = R0SDs[2]), 0, Inf)
     UGamma ~ dgamma(shape = UGammaShape, rate = UGammaRate)
     DGamma ~ dgamma(shape = DGammaShape, rate = DGammaRate)
     # likelihood
@@ -91,7 +91,7 @@ initialValues.ASIR <- function(epiModel, hyperParameters){
   epiModel@Model$DGammaRate <- hyperParameters$Priors$DetectionRate$Rate
   epiModel@Model$R0Means <- hyperParameters$Priors$R0$Means
   epiModel@Model$R0SDs <- hyperParameters$Priors$R0$SDs
-    
+
   mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
   mcmc$addSampler(target = "newI",
                   type = sampler,
