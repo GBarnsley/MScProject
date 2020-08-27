@@ -29,7 +29,7 @@ ASIR <- function(newR,
     I[1] <- 1
     for(i in 1:(ChangePoint-1)){
       newI[i] ~ dbinom(size = S[i],
-                       prob =  probGen(I[i]*Betas[1^(i < ChangePoint) + 1^(i>=ChangePoint)]*t.step/(Pop^Frequency)))
+                       prob =  probGen(I[i]*Betas[1]*t.step/(Pop^Frequency)))
       newDR[i] ~ dbinom(size = I[i], prob =  probGen(DGamma*t.step))
       newUR[i] ~ dbinom(size = I[i] - newDR[i], prob =  probGen(UGamma*t.step))
       S[i+1] <- S[i] - newI[i]
@@ -120,10 +120,7 @@ initialValues.ASIR <- function(epiModel, hyperParameters){
 #'@export
 buildMCMCInternal.ASIR <- function(epiModel, hyperParameters){
   output <- configureMCMC(epiModel@Model, nodes = NULL)
-  output$addSampler(target = c('Betas[1]', 'Betas[2]'),
-                    type = sampler_RW_block,
-                    control = hyperParameters[["RWM"]])
-  output$addSampler(target = c('UGamma', 'DGamma'),
+  output$addSampler(target = c('Betas[1]', 'Betas[2]', 'UGamma', 'DGamma'),
                     type = sampler_RW_block,
                     control = hyperParameters[["RWM"]])
   output$addSampler(target = "newI",
