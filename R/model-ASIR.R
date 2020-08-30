@@ -30,7 +30,7 @@ ASIR <- function(newR,
       newI[i] ~ dbinom(size = S[i],
                        prob =  probGen(I[i]*Betas[1]*t.step/(Pop^Frequency)))
       newDR[i] ~ dbinom(size = I[i], prob =  probGen(DGamma*t.step))
-      newUR[i] ~ dbinom(size = I[i] - newDR[i], prob =  probGen(UGamma*t.step))
+      newUR[i] ~ T(dbinom(size = I[i], prob =  probGen(UGamma*t.step)), 0, I[i] - newDR[i])
       S[i+1] <- S[i] - newI[i]
       I[i+1] <- I[i] + newI[i] - newDR[i] - newUR[i]
     }
@@ -38,7 +38,7 @@ ASIR <- function(newR,
       newI[i] ~ dbinom(size = S[i],
                        prob =  probGen(I[i]*Betas[2]*t.step/(Pop^Frequency)))
       newDR[i] ~ dbinom(size = I[i], prob =  probGen(DGamma*t.step))
-      newUR[i] ~ dbinom(size = I[i] - newDR[i], prob =  probGen(UGamma*t.step))
+      newUR[i] ~ T(dbinom(size = I[i], prob =  probGen(UGamma*t.step)), 0, I[i] - newDR[i])
       S[i+1] <- S[i] - newI[i]
       I[i+1] <- I[i] + newI[i] - newDR[i] - newUR[i]
     }
