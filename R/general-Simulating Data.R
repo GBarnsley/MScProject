@@ -1,5 +1,16 @@
-#' Generates Many Simulated Epidemics for the SIR class
+#' Function to simulate SIR epidemics.
+#' Automatically discounts failed epidemics (if the epidemic fails to infect more
+#' than a 100th of the total population) and epidemics that fail to finish before
+#' the maximum time period. The number of failures is printed at the end.
+#' @param Beta The infective weight of a single infectious individual of the epidemic
+#' @param Gamma The recovery rate of the epidemic
+#' @param Pop Total population in the epidemic
+#' @param N The number of epidemics to simulate
+#' @param t.step The time-step the model follows, only affects the scale of Beta and Gamma
+#' @param seed The random seed for the start of the simulations
+#' @param Frequency A true/false value, specifying if the model has frequency-based transmission
 #' @param t.max The maximum length of time to run for, Ideally should be adjusted so that the number of incomplete epidemics is close to 0
+#' @return A list of transition vectors for infections and recoveries
 #' @export
 simulateSIRs <- function(Beta, Gamma, Pop, N, t.step = 1, t.max = NA, seed = NA, Frequency = TRUE){
   if(!is.na(seed)){

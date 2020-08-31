@@ -1,5 +1,5 @@
-#'
-#'@export
+#' The expanded SIR epidemic class
+#' @export
 ASIRclass <- setClass(
   "ASIR",
   slots = c(
@@ -8,8 +8,15 @@ ASIRclass <- setClass(
     Samples = "ANY"
   )
 )
-#'
-#'@export
+#' Function to create an epidemic model of the expanded SIR class.
+#' @param newR Time series that acts as the observed recoveries
+#' @param N The population
+#' @param t.step The time step of the model
+#' @param Frequency TRUE/FALSE value specifying if the model has frequency based transmission
+#' @param ChangePoint The time at which we switch Beta values
+#' @param TotalInfections The full size of the epidemic, including unobserved infections
+#' @return An object of ASIR class with the compiled model code
+#' @export
 ASIR <- function(newR,
                 N,
                 t.step = 1,
@@ -78,8 +85,13 @@ ASIR <- function(newR,
   )
   )
 }
-#'
-#'@export
+#' Initialization method for the expanded SIR model.
+#' Sets up provided initial values and runs the NpmDelta algorithm to estimate
+#' newI and newUR for those values.
+#' @param epiModel An object of the ASIR class
+#' @param hyperParameters A list of lists of the hyper-parameters for the epidemic model and MCMC
+#' @return ASIR class with the initial values
+#' @export
 initialValues.ASIR <- function(epiModel, hyperParameters){
   epiModel@Model$Betas <- hyperParameters$`Initial Values`$Betas
   epiModel@Model$UGamma <- hyperParameters$`Initial Values`$UGamma
@@ -115,8 +127,13 @@ initialValues.ASIR <- function(epiModel, hyperParameters){
     epiModel
   )
 }
-#'
-#'@export
+#' Method to build an MCMC for the expanded SIR class.
+#' Applies a block RWM to the beta and gamma parameters and two NpmDelta algorithms
+#' on newI and newUR.
+#' @param epiModel An object of the ASIR class
+#' @param hyperParameters A list of lists of the hyper-parameters for the epidemic model and MCMC
+#' @return ASIR class with a compiled MCMC
+#' @export
 buildMCMCInternal.ASIR <- function(epiModel, hyperParameters){
   output <- configureMCMC(epiModel@Model, nodes = NULL)
   output$addSampler(target = c('Betas[1]', 'Betas[2]', 'UGamma', 'DGamma'),

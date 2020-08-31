@@ -1,12 +1,12 @@
-#' Generates the misisng values/estimates parameters using the
-#' Metropolis Hastings algorithm. Returns a list of samples from
-#' the posterior distribution. Currently only runs the hybrid algorithm
-#' @param epiModel Some object with parameters/missing data to impute
-#' @param proposal the proposal function
-#' @param hyperParameters the hyperparameters for the priors, in list form + variance for randomwalk
-#' @param samples the target number of samples to be left with
-#' @param burnin the amount of samples to be dropped as burnin
-#' @param keep the algorithm will keep 1 in keep of the generated samples
+#' A function to run the Metropolis-Hastings-within-Gibbs Algorithm, on a
+#' given epidemic model. All functions called are generic so this function works
+#' for any specified epidemic model.
+#' @param epiModel An object of the class one of the specific epidemic model
+#' @param hyperParameters A list of lists of the hyper-parameters for the epidemic model and MCMC
+#' @param samples The target number of samples to generate
+#' @param burnin The amount of samples to be dropped as burnin
+#' @param keep The post-burnin thinning interval
+#' @return An object of the same epidemic class, with the produced samples and MCMC in its final state
 #' @export
 metropolisHastings <- function(epiModel,
                                hyperParameters,

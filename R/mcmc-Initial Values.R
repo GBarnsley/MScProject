@@ -1,4 +1,7 @@
-#' function that sets up initial values for MH algorithm.
+#' Generic function that calls the model specific initialization methods
+#' @param epiModel An object of the class one of the specific epidemic model
+#' @param hyperParameters A list of lists of the hyper-parameters for the epidemic model and MCMC
+#' @return An object of the given epidemic class but initialized via the specified method
 #' @export
 initialValues <- function(epiModel, hyperParameters){
   sampler <- nimbleFunction(
@@ -10,81 +13,4 @@ initialValues <- function(epiModel, hyperParameters){
     )
   )
   UseMethod("initialValues", epiModel)
-}
-#' Intial values for SIR model. Just sets Beta and Gamma to
-#' the start value specified in the hyperparameters.
-#' from it.
-#' @export
-initialValues.SIR <- function(epiModel, hyperParameters){
-  epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
-  epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  return(
-    epiModel
-  )
-}
-#' Intial values for SIR model. Just sets Beta and Gamma to
-#' the start value specified in the hyperparameters and then
-#' generates newI.
-#' from it.
-#' @export
-initialValues.iSIR <- function(epiModel, hyperParameters){
-  epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
-  epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  epiModel@Model$newI <- rep(0, length(epiModel@Model$newR))
-  epiModel@Model$newI[1] <- sum(epiModel@Model$newR) - 1
-  mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
-  mcmc$addSampler(target = "newI",
-                    type = sampler,
-                    control = list(
-                      TMax = 20,
-                      DeltaMax = 20,
-                      R = hyperParameters$`Initial Values`$Runs
-                    ))
-  mcmc <- buildMCMC(
-    mcmc
-  )
-  mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
-  mcmc$run(1)
-  return(
-    epiModel
-  )
-}
-#' Intial values for SIR model. Just sets Beta and Gamma to
-#' the start value specified in the hyperparameters and then
-#' generates newR.
-#' from it.
-#' @export
-initialValues.rSIR <- function(epiModel, hyperParameters){
-  epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
-  epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
-  epiModel@Model$newR <- rep(0, length(epiModel@Model$newI))
-  epiModel@Model$newR[length(epiModel@Model$newI)] <- sum(epiModel@Model$newI) + 1
-  mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
-  mcmc$addSampler(target = "newR",
-                  type = sampler,
-                  control = list(
-                    TMax = 20,
-                    DeltaMax = 20,
-                    R = hyperParameters$`Initial Values`$Runs
-                  ))
-  mcmc <- buildMCMC(
-    mcmc
-  )
-  mcmc <- compileNimble(mcmc, project = epiModel@Model, resetFunctions = TRUE)
-  mcmc$run(1)
-  return(
-    epiModel
-  )
 }
