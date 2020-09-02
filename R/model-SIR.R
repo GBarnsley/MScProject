@@ -214,10 +214,10 @@ buildMCMCInternal.SIR <- function(epiModel, hyperParameters){
 initialValues.SIR <- function(epiModel, hyperParameters){
   epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
   epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
+  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Shape
+  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Rate
+  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Shape
+  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Rate
   return(
     epiModel
   )
