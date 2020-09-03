@@ -18,10 +18,10 @@ initialValues <- function(epiModel, hyperParameters){
 initialValues.SIR <- function(epiModel, hyperParameters){
   epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
   epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
+  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Shape
+  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Rate
+  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Shape
+  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Rate
   return(
     epiModel
   )
@@ -34,10 +34,10 @@ initialValues.SIR <- function(epiModel, hyperParameters){
 initialValues.iSIR <- function(epiModel, hyperParameters){
   epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
   epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
+  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Shape
+  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Rate
+  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Shape
+  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Rate
   epiModel@Model$newI <- rep(0, length(epiModel@Model$newR))
   epiModel@Model$newI[1] <- sum(epiModel@Model$newR) - 1
   mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
@@ -65,10 +65,10 @@ initialValues.iSIR <- function(epiModel, hyperParameters){
 initialValues.rSIR <- function(epiModel, hyperParameters){
   epiModel@Model$Beta <- hyperParameters$`Initial Values`$Beta
   epiModel@Model$Gamma <- hyperParameters$`Initial Values`$Gamma
-  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Alpha
-  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Beta
-  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Alpha
-  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Beta
+  epiModel@Model$BetaShape <- hyperParameters$Priors$Beta$Shape
+  epiModel@Model$BetaRate <- hyperParameters$Priors$Beta$Rate
+  epiModel@Model$GammaShape <- hyperParameters$Priors$Gamma$Shape
+  epiModel@Model$GammaRate <- hyperParameters$Priors$Gamma$Rate
   epiModel@Model$newR <- rep(0, length(epiModel@Model$newI))
   epiModel@Model$newR[length(epiModel@Model$newI)] <- sum(epiModel@Model$newI) + 1
   mcmc <- configureMCMC(epiModel@Model, nodes = NULL)
