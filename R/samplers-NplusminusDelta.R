@@ -6,7 +6,7 @@ stepSampler_setup <- function(model, mvSaved, target, control) {
   maxStep <- as.integer(control$TMax)
   maxChange <- as.integer(control$DeltaMax)
   calcNodes <- model$getDependencies(target)
-  runs <- control$R
+  runs <- as.integer(control$R)
 }
 #' A function used internally in the NpmDelta Sampler.
 #' Runs the NpmDelta algorithm, steps are annotated in the code.
